@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "/opt//devkitPro",
                 "/opt/devkitpro/libgba/include",
-                "/opt/tonclib/include"
+                "/opt/tonclib/include",
+                "${workspaceFolder}/source"
             ],
             "defines": [],
             "macFrameworkPath": [],

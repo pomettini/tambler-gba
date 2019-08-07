@@ -4,5 +4,32 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"gba_interrupt.h": "c",
+			"gba_video.h": "c",
+			"gba_systemcalls.h": "c",
+			"hel2.h": "c",
+			"jewel2.h": "c",
+			"gba.h": "c",
+			"gba_regs.h": "c",
+			"gba_types.h": "c",
+			"jewel3.h": "c",
+			"jewel4.h": "c",
+			"stdlib.h": "c",
+			"font.h": "c",
+			"jewel6.h": "c",
+			"sprites.h": "c",
+			"jewelboard.h": "c",
+			"gba_sprites.h": "c",
+			"kirbystand.h": "c",
+			"mariostand.h": "c",
+			"gba3.h": "c",
+			"lib_text.h": "c",
+			"lib_background.h": "c",
+			"letters256.h": "c",
+			"main.h": "c"
+		},
+		"cSpell.enabled": false
+	}
 }
