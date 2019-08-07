@@ -1,33 +1,36 @@
 #include <string.h>
 #include "gba.h"
 #include "sprites.h"
+#include "main.h"
 
-#define FALSE 0
-#define TRUE 1
+// States
+u16 game_state = GAME;
 
-#define ever \
-	;        \
-	;
+// Gameplay globals
+database_t database[100];
+post_t posts[4];
+u16 score = 0;
+u16 countdown = COUNTDOWN_START_VAL;
 
-enum states
-{
-	MENU = 0,
-	TUTORIAL = 1,
-	GAME = 2,
-	GAME_OVER = 3
-};
+// Animation globals
+u16 menu_lock = FALSE;
 
-int game_state = MENU;
+// Game animation globals
+s16 swipe_direction = 0;
+u16 is_animating_feed = FALSE;
+u16 is_animating_swipe = FALSE;
+s16 posts_y_offset = 0;
+s16 posts_x_offset = 0;
 
+// Const globals
+const u16 countdown_speed = 1;
+
+// GBA stuff
 OAMEntry sprites[128];
 
 u16 pos_x = 0;
 u16 pos_y = 0;
 u16 palette = 0;
-
-void CopyOAM();
-void InitializeSprites();
-void MoveSprite(OAMEntry *sp, int x, int y);
 
 int main()
 {
@@ -39,43 +42,28 @@ int main()
 		OBJ_PaletteMem[loop] = tileset_palette[loop];
 
 	InitializeSprites();
+	ResetSpritesPosition();
 
 	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
 
-	// LoadBackgroundTiles(lettersData, 2, letters_WIDTH * letters_HEIGHT / 2);
+	// for (;;)
+	// {
+	// 	MoveMediumSprite(MEDIUM_SPR_START_OFFSET, 16, 16);
+	// 	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 1, 16, 64);
+	// 	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 2, 16, 112);
 
-	for (;;)
+	// 	MoveBigSprite(BIG_SPR_START_OFFSET, 48, 16);
+	// 	MoveBigSprite(BIG_SPR_START_OFFSET + 1, 48, 64);
+	// 	MoveBigSprite(BIG_SPR_START_OFFSET + 2, 48, 112);
+
+	// 	WaitForVsync();
+	// 	CopyOAM();
+	// }
+
+	for (ever)
 	{
-		if (keyDown(KEY_L))
-			palette--;
-
-		if (keyDown(KEY_R))
-			palette++;
-
-		if (keyDown(KEY_LEFT))
-			pos_x--;
-
-		if (keyDown(KEY_RIGHT))
-			pos_x++;
-
-		if (keyDown(KEY_UP))
-			pos_y--;
-
-		if (keyDown(KEY_DOWN))
-			pos_y++;
-
-		sprites[0].attribute0 = COLOR_256 | SQUARE | pos_y;
-		sprites[0].attribute1 = SIZE_64 | pos_x;
-		sprites[0].attribute2 = palette;
-
-		// sprites[1].attribute0 = COLOR_256 | WIDE | 30 + pos_y;
-		// sprites[1].attribute1 = SIZE_32 | 30 + pos_x;
-		// sprites[1].attribute2 = 2;
-
-		// WriteText(21, 30, 18, 19, "Pause", 10, 0, 0);
-
-		WaitForVsync();
-		CopyOAM();
+		_Update();
+		_Draw();
 	}
 
 	return 0;
@@ -92,7 +80,7 @@ void CopyOAM()
 	}
 }
 
-void InitializeSprites()
+void ResetSpritesPosition()
 {
 	for (int x = 0; x < 128; x++)
 	{
@@ -101,16 +89,205 @@ void InitializeSprites()
 	}
 }
 
-void MoveSprite(OAMEntry *sp, int x, int y)
+void InitializeSprites()
 {
-	if (x < 0) //if it is off the left correct
-		x = 512 + x;
-	if (y < 0) //if off the top correct
-		y = 256 + y;
+	// Init small sprites
+	for (u16 i = 0; i < 16; i++)
+	{
+		sprites[i].attribute0 = COLOR_256 | SQUARE | i * 8;
+		sprites[i].attribute1 = SIZE_8 | i * 8;
+		sprites[i].attribute2 = 2 + (i * 2);
+	}
 
-	sp->attribute1 = sp->attribute1 & 0xFE00; //clear the old x value
-	sp->attribute1 = sp->attribute1 | x;
+	// Init medium sprites
+	for (u16 i = 0; i < 8; i++)
+	{
+		sprites[i + 16].attribute0 = COLOR_256 | SQUARE | i * 16;
+		sprites[i + 16].attribute1 = SIZE_16 | i * 16;
+		sprites[i + 16].attribute2 = 64 + (i * 4);
+	}
 
-	sp->attribute0 = sp->attribute0 & 0xFF00; //clear the old y value
-	sp->attribute0 = sp->attribute0 | y;
+	// Init big sprites
+	for (u16 i = 0; i < 4; i++)
+	{
+		sprites[i + 24].attribute0 = COLOR_256 | SQUARE | i * 32;
+		sprites[i + 24].attribute1 = SIZE_32 | i * 32;
+		sprites[i + 24].attribute2 = 128 + (i * 8);
+	}
+}
+
+void MoveSmallSprite(u16 id, u16 pos_x, u16 pos_y)
+{
+	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
+	sprites[id].attribute1 = SIZE_8 | pos_x;
+}
+
+void MoveMediumSprite(u16 id, u16 pos_x, u16 pos_y)
+{
+	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
+	sprites[id].attribute1 = SIZE_16 | pos_x;
+}
+
+void MoveBigSprite(u16 id, u16 pos_x, u16 pos_y)
+{
+	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
+	sprites[id].attribute1 = SIZE_32 | pos_x;
+}
+
+void LoadDatabase()
+{
+}
+
+void LoadTutorialPost()
+{
+}
+
+void GeneratePosts()
+{
+}
+
+void PopAndPushPost()
+{
+}
+
+void PopAndPushTutorial()
+{
+}
+
+void ProcessButtons()
+{
+}
+
+void ProcessFeedAnimation()
+{
+}
+
+void ProcessSwipeAnimation()
+{
+	if (is_animating_swipe == TRUE)
+	{
+		posts_x_offset += 16 * swipe_direction;
+	}
+
+	if (posts_x_offset <= -160 || posts_x_offset >= 160)
+	{
+		is_animating_feed = TRUE;
+		is_animating_swipe = FALSE;
+	}
+}
+
+void DecreaseCountdown()
+{
+	if (is_animating_swipe == FALSE)
+	{
+		countdown -= countdown_speed * (score + 1);
+	}
+}
+
+void PostAnimationEnded()
+{
+	if (game_state == TUTORIAL)
+	{
+		// pop and push tutorial
+	}
+
+	if (game_state == GAME)
+	{
+		// evaluate content
+		// pop and push post
+	}
+}
+
+void EvaluateContent(post_t *post)
+{
+	if (post->is_valid == TRUE && swipe_direction == 1 || post->is_valid == FALSE && swipe_direction == -1)
+	{
+		score++;
+		countdown = COUNTDOWN_START_VAL;
+	}
+	else
+	{
+		countdown = 0;
+		// sfx wrong
+	}
+}
+
+void EvaluateGameOver()
+{
+	if (countdown <= 0)
+	{
+		ChangeState(GAME_OVER);
+		// sfx wrong
+	}
+}
+
+void ChangeState(u16 new_state)
+{
+	menu_lock = TRUE;
+	game_state = new_state;
+
+	if (new_state == GAME)
+	{
+		ResetGameState();
+		StartGameMusic();
+	}
+}
+
+void ResetGameState()
+{
+	LoadDatabase();
+	GeneratePosts();
+	score = 0;
+	countdown = COUNTDOWN_START_VAL;
+	swipe_direction = 0;
+	is_animating_feed = FALSE;
+	is_animating_swipe = FALSE;
+	posts_x_offset = 0;
+	posts_y_offset = 0;
+}
+
+void StartGameMusic()
+{
+}
+
+void _Init()
+{
+}
+
+void _Update()
+{
+	if (game_state == MENU)
+	{
+	}
+	else if (game_state == TUTORIAL)
+	{
+	}
+	else if (game_state == GAME)
+	{
+	}
+	else if (game_state == GAME_OVER)
+	{
+	}
+	else if (game_state == CREDITS)
+	{
+	}
+}
+
+void _Draw()
+{
+	if (game_state == MENU)
+	{
+	}
+	else if (game_state == TUTORIAL)
+	{
+	}
+	else if (game_state == GAME)
+	{
+	}
+	else if (game_state == GAME_OVER)
+	{
+	}
+	else if (game_state == CREDITS)
+	{
+	}
 }
