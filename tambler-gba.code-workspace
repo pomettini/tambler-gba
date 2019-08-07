@@ -28,7 +28,8 @@
 			"lib_text.h": "c",
 			"lib_background.h": "c",
 			"letters256.h": "c",
-			"main.h": "c"
+			"main.h": "c",
+			"dma.c": "cpp"
 		},
 		"cSpell.enabled": false
 	}

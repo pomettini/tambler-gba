@@ -1,7 +1,6 @@
 #include <string.h>
 #include "gba.h"
 #include "sprites.h"
-// #include "lib_text.h"
 
 #define FALSE 0
 #define TRUE 1
@@ -24,7 +23,7 @@ OAMEntry sprites[128];
 
 u16 pos_x = 0;
 u16 pos_y = 0;
-u16 palette = 512;
+u16 palette = 0;
 
 void CopyOAM();
 void InitializeSprites();
@@ -32,23 +31,21 @@ void MoveSprite(OAMEntry *sp, int x, int y);
 
 int main()
 {
-	SetMode(MODE_1 | BG0_ENABLE | BG2_ENABLE | OBJ_ENABLE | OBJ_MAP_1D);
+	u16 loop;
 
-	for (u16 i = 0; i < 256; i++)
-		OBJ_PaletteMem[i] = tambler_sprites_palette[i];
+	SetMode(MODE_1 | OBJ_ENABLE | OBJ_MAP_2D);
 
-	memcpy(OAM_Data + 4000, &tambler_sprites, sizeof(tambler_sprites));
+	for (loop = 0; loop < 256; loop++)
+		OBJ_PaletteMem[loop] = tileset_palette[loop];
+
+	InitializeSprites();
+
+	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
 
 	// LoadBackgroundTiles(lettersData, 2, letters_WIDTH * letters_HEIGHT / 2);
 
-	CopyOAM();
-
 	for (;;)
 	{
-		sprites[0].attribute0 = COLOR_256 | SQUARE | pos_y;
-		sprites[0].attribute1 = SIZE_64 | pos_x;
-		sprites[0].attribute2 = palette;
-
 		if (keyDown(KEY_L))
 			palette--;
 
@@ -66,6 +63,14 @@ int main()
 
 		if (keyDown(KEY_DOWN))
 			pos_y++;
+
+		sprites[0].attribute0 = COLOR_256 | SQUARE | pos_y;
+		sprites[0].attribute1 = SIZE_64 | pos_x;
+		sprites[0].attribute2 = palette;
+
+		// sprites[1].attribute0 = COLOR_256 | WIDE | 30 + pos_y;
+		// sprites[1].attribute1 = SIZE_32 | 30 + pos_x;
+		// sprites[1].attribute2 = 2;
 
 		// WriteText(21, 30, 18, 19, "Pause", 10, 0, 0);
 
