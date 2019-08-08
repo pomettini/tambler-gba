@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "gba.h"
 #include "sprites.h"
+#include "font.h"
 #include "main.h"
 
 // States
@@ -32,6 +33,8 @@ u16 pos_x = 0;
 u16 pos_y = 0;
 u16 palette = 0;
 
+u16 current_char = 0;
+
 int main()
 {
 	SetMode(MODE_1 | OBJ_ENABLE | OBJ_MAP_2D);
@@ -39,13 +42,21 @@ int main()
 	for (u16 i = 0; i < 256; i++)
 		OBJ_PaletteMem[i] = tileset_palette[i];
 
-	InitializeSprites();
-	ResetSpritesPosition();
-
 	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
+	memcpy(OAM_Data + 4096, font_data, sizeof(font_data));
+
+	InitializeSprites();
+
+	ResetSpritesPosition();
 
 	for (ever)
 	{
+		current_char = 0;
+
+		DrawCharacter('A', 0, 0);
+		DrawCharacter('A', 8, 0);
+		DrawCharacter('A', 16, 0);
+
 		_Update();
 		_Draw();
 		WaitForVsync();
@@ -102,6 +113,15 @@ void InitializeSprites()
 	}
 }
 
+void DrawCharacter(char char_, u16 pos_x, u16 pos_y)
+{
+	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | SQUARE | pos_y;
+	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute1 = SIZE_8 | pos_x;
+	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = 256 + ((int)char_ * 2);
+
+	current_char++;
+}
+
 void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y)
 {
 	if (pos_x < 0)
@@ -129,7 +149,7 @@ void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y)
 	sprites[id].attribute1 = SIZE_32 | pos_x;
 }
 
-void LoadTutorialPost()
+void LoadTutorialPosts()
 {
 }
 
@@ -137,7 +157,7 @@ void GeneratePosts()
 {
 	// for (u16 i = 0; i < 4; i++)
 	// {
-	// 	posts[i] =
+	// 	post_t post = GetRandomPost();
 	// }
 }
 
@@ -218,7 +238,7 @@ void ProcessSwipeAnimation()
 		posts_x_offset += 16 * swipe_direction;
 	}
 
-	if (posts_x_offset <= -160 || posts_x_offset >= 160)
+	if (posts_x_offset <= -240 || posts_x_offset >= 240)
 	{
 		is_animating_feed = TRUE;
 		is_animating_swipe = FALSE;

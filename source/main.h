@@ -19,6 +19,8 @@
 #define POSTS_NUM 4
 #define TEXT_LEN_MAX 13
 
+#define LETTERS_NUM 26
+
 enum states
 {
     MENU = 0,
@@ -49,11 +51,12 @@ typedef struct post
 void CopyOAM();
 void ResetSpritesPosition();
 void InitializeSprites();
+void DrawCharacter(char char_, u16 pos_x, u16 pos_y);
 void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y);
 
-void LoadTutorialPost();
+void LoadTutorialPosts();
 void GeneratePosts();
 void PopAndPushPost();
 void PopAndPushTutorial();
