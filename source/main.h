@@ -18,8 +18,8 @@
 #define COUNTDOWN_START_VAL 100
 #define POSTS_NUM 4
 #define TEXT_LEN_MAX 13
-
 #define LETTERS_NUM 26
+#define LETTERS_MAX 92
 
 enum states
 {
@@ -76,6 +76,7 @@ void ChangeState(u16 new_state);
 void ResetGameState();
 void DrawPost(s16 x_offset, s16 y_offset, post_t *post);
 void DrawPosts();
+void DrawPostBg(u16 id, s16 pos_x, s16 pos_y);
 void StartGameMusic();
 
 void _Init();

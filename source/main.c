@@ -1,8 +1,10 @@
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "gba.h"
 #include "sprites.h"
 #include "font.h"
+#include "game_background.h"
 #include "main.h"
 
 // States
@@ -35,16 +37,29 @@ u16 pos_y = 0;
 u16 palette = 0;
 
 u16 current_char = 0;
+u16 current_post_id = 0;
+
+#define REG_BG0CNT *(volatile u16 *)0x4000008
 
 int main()
 {
-	SetMode(MODE_1 | OBJ_ENABLE | OBJ_MAP_2D);
+	SetMode(MODE_1 | BG0_ENABLE | OBJ_ENABLE | OBJ_MAP_2D);
+
+	// TODO: Find a way to generate a random seed
+	srand(0);
+
+	REG_BG0CNT = 0x1F83;
 
 	for (u16 i = 0; i < 256; i++)
+	{
 		OBJ_PaletteMem[i] = tileset_palette[i];
+		BG_PaletteMem[i] = game_background_palette[i];
+	}
 
+	memcpy(FrontBuffer, game_background_data, sizeof(game_background_data));
 	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
-	memcpy(OAM_Data + 4096, font_data, sizeof(font_data));
+	// Was 4096
+	memcpy(OAM_Data + 8192, font_data, sizeof(font_data));
 
 	InitializeSprites();
 
@@ -117,9 +132,12 @@ void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y)
 	if (pos_x < 0)
 		pos_x = 256;
 
+	if (current_char >= LETTERS_MAX)
+		return;
+
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute1 = SIZE_8 | pos_x;
-	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = 256 + ((int)char_ * 2);
+	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = 512 + ((int)char_ * 2);
 
 	current_char++;
 }
@@ -177,9 +195,9 @@ post_t GeneratePost()
 {
 	u16 random_post = GetRandomPostId();
 	post_t post = {
-		"VENDESI",
-		"SOPRAMMOBILI",
-		"USATI",
+		"10 MOTIVI",
+		"PER SMETTERE",
+		"DI FUMARE",
 		TRUE,
 		GetRandomProfilePic(),
 		GetRandomPostPic()};
@@ -342,6 +360,7 @@ void ResetGameState()
 void DrawPost(s16 x_offset, s16 y_offset, post_t *post)
 {
 	// Post bg
+	DrawPostBg(current_post_id, x_offset, y_offset);
 	// Profile pic
 	MoveMediumSprite(post->profile_id, 8 + x_offset, 8 + y_offset);
 	// Image
@@ -359,6 +378,8 @@ void DrawPost(s16 x_offset, s16 y_offset, post_t *post)
 		post->third,
 		72 + x_offset,
 		32 + y_offset + text_y_offset);
+
+	current_post_id += 2;
 }
 
 void DrawPosts()
@@ -366,20 +387,26 @@ void DrawPosts()
 	s16 y_offset = posts_y_offset + 16;
 	s16 x_offset = posts_x_offset;
 
-	DrawPost(x_offset, 0 + y_offset, &posts[0]);
-	DrawPost(0, 40 + y_offset, &posts[1]);
-	DrawPost(0, 80 + y_offset, &posts[2]);
-	DrawPost(0, 120 + y_offset, &posts[3]);
+	current_post_id = 0;
 
-	// MoveMediumSprite(MEDIUM_SPR_START_OFFSET, 16 + x_offset, 0 + y_offset);
-	// MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 1, 16, 40 + y_offset);
-	// MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 2, 16, 80 + y_offset);
-	// MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 3, 16, 120 + y_offset);
+	DrawPost(20 + x_offset, 0 + y_offset, &posts[0]);
+	DrawPost(20, 40 + y_offset, &posts[1]);
+	DrawPost(20, 80 + y_offset, &posts[2]);
+	DrawPost(20, 120 + y_offset, &posts[3]);
+}
 
-	// MoveBigSprite(BIG_SPR_START_OFFSET, 48 + x_offset, 0 + y_offset);
-	// MoveBigSprite(BIG_SPR_START_OFFSET + 1, 48, 40 + y_offset);
-	// MoveBigSprite(BIG_SPR_START_OFFSET + 2, 48, 80 + y_offset);
-	// MoveBigSprite(BIG_SPR_START_OFFSET + 3, 48, 120 + y_offset);
+void DrawPostBg(u16 id, s16 pos_x, s16 pos_y)
+{
+	if (pos_x < -64)
+		pos_x = 256;
+
+	sprites[120 + id].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 8 + pos_y;
+	sprites[120 + id].attribute1 = SIZE_32 | ROTDATA(0) | 64 + pos_x;
+	sprites[120 + id].attribute2 = 256 + 128;
+
+	sprites[121 + id].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 8 + pos_y;
+	sprites[121 + id].attribute1 = SIZE_32 | ROTDATA(0) | 128 + pos_x;
+	sprites[121 + id].attribute2 = 256 + 128;
 }
 
 void StartGameMusic()

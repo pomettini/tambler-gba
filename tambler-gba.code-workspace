@@ -30,7 +30,11 @@
 			"letters256.h": "c",
 			"main.h": "c",
 			"dma.c": "cpp",
-			"smgbalib.h": "c"
+			"smgbalib.h": "c",
+			"string.h": "c",
+			"game_background.h": "c",
+			"general.h": "c",
+			"rng.h": "c"
 		},
 		"cSpell.enabled": false
 	}
