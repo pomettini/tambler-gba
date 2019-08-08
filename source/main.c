@@ -25,6 +25,7 @@ s16 posts_x_offset = 0;
 
 // Const globals
 const u16 countdown_speed = 1;
+const u16 text_y_offset = -3;
 
 // GBA stuff
 OAMEntry sprites[128];
@@ -49,13 +50,11 @@ int main()
 
 	ResetSpritesPosition();
 
+	GeneratePosts();
+
 	for (ever)
 	{
 		current_char = 0;
-
-		DrawCharacter('A', 0, 0);
-		DrawCharacter('A', 8, 0);
-		DrawCharacter('A', 16, 0);
 
 		_Update();
 		_Draw();
@@ -113,13 +112,26 @@ void InitializeSprites()
 	}
 }
 
-void DrawCharacter(char char_, u16 pos_x, u16 pos_y)
+void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y)
 {
+	if (pos_x < 0)
+		pos_x = 256;
+
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute1 = SIZE_8 | pos_x;
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = 256 + ((int)char_ * 2);
 
 	current_char++;
+}
+
+void DrawText(unsigned char *text, s16 pos_x, s16 pos_y)
+{
+	u16 curr_pos_x = pos_x;
+	while (*text != '\0')
+	{
+		DrawCharacter(*text++, curr_pos_x, pos_y);
+		curr_pos_x += 8;
+	}
 }
 
 void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y)
@@ -155,10 +167,23 @@ void LoadTutorialPosts()
 
 void GeneratePosts()
 {
-	// for (u16 i = 0; i < 4; i++)
-	// {
-	// 	post_t post = GetRandomPost();
-	// }
+	for (u16 i = 0; i < 4; i++)
+	{
+		posts[i] = GeneratePost();
+	}
+}
+
+post_t GeneratePost()
+{
+	u16 random_post = GetRandomPostId();
+	post_t post = {
+		"VENDESI",
+		"SOPRAMMOBILI",
+		"USATI",
+		TRUE,
+		GetRandomProfilePic(),
+		GetRandomPostPic()};
+	return post;
 }
 
 void PopAndPushPost()
@@ -167,16 +192,16 @@ void PopAndPushPost()
 	posts[0] = posts[1];
 	posts[1] = posts[2];
 	posts[2] = posts[3];
-	// posts[3] = database[GetRandomPostId()];
+	posts[3] = GeneratePost();
 }
 
 void PopAndPushTutorial()
 {
 }
 
-post_t GetRandomPost()
+u16 GetRandomPostId()
 {
-	return DATABASE[rand() % POSTS_NUM];
+	return rand() % POSTS_NUM;
 }
 
 u16 GetRandomProfilePic()
@@ -322,6 +347,18 @@ void DrawPost(s16 x_offset, s16 y_offset, post_t *post)
 	// Image
 	MoveBigSprite(post->pic_id, 32 + x_offset, 8 + y_offset);
 	// Text
+	DrawText(
+		post->first,
+		72 + x_offset,
+		16 + y_offset + text_y_offset);
+	DrawText(
+		post->second,
+		72 + x_offset,
+		24 + y_offset + text_y_offset);
+	DrawText(
+		post->third,
+		72 + x_offset,
+		32 + y_offset + text_y_offset);
 }
 
 void DrawPosts()
@@ -329,15 +366,20 @@ void DrawPosts()
 	s16 y_offset = posts_y_offset + 16;
 	s16 x_offset = posts_x_offset;
 
-	MoveMediumSprite(MEDIUM_SPR_START_OFFSET, 16 + x_offset, 0 + y_offset);
-	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 1, 16, 40 + y_offset);
-	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 2, 16, 80 + y_offset);
-	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 3, 16, 120 + y_offset);
+	DrawPost(x_offset, 0 + y_offset, &posts[0]);
+	DrawPost(0, 40 + y_offset, &posts[1]);
+	DrawPost(0, 80 + y_offset, &posts[2]);
+	DrawPost(0, 120 + y_offset, &posts[3]);
 
-	MoveBigSprite(BIG_SPR_START_OFFSET, 48 + x_offset, 0 + y_offset);
-	MoveBigSprite(BIG_SPR_START_OFFSET + 1, 48, 40 + y_offset);
-	MoveBigSprite(BIG_SPR_START_OFFSET + 2, 48, 80 + y_offset);
-	MoveBigSprite(BIG_SPR_START_OFFSET + 3, 48, 120 + y_offset);
+	// MoveMediumSprite(MEDIUM_SPR_START_OFFSET, 16 + x_offset, 0 + y_offset);
+	// MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 1, 16, 40 + y_offset);
+	// MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 2, 16, 80 + y_offset);
+	// MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 3, 16, 120 + y_offset);
+
+	// MoveBigSprite(BIG_SPR_START_OFFSET, 48 + x_offset, 0 + y_offset);
+	// MoveBigSprite(BIG_SPR_START_OFFSET + 1, 48, 40 + y_offset);
+	// MoveBigSprite(BIG_SPR_START_OFFSET + 2, 48, 80 + y_offset);
+	// MoveBigSprite(BIG_SPR_START_OFFSET + 3, 48, 120 + y_offset);
 }
 
 void StartGameMusic()

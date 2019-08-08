@@ -29,7 +29,8 @@
 			"lib_background.h": "c",
 			"letters256.h": "c",
 			"main.h": "c",
-			"dma.c": "cpp"
+			"dma.c": "cpp",
+			"smgbalib.h": "c"
 		},
 		"cSpell.enabled": false
 	}

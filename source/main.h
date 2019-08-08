@@ -51,16 +51,18 @@ typedef struct post
 void CopyOAM();
 void ResetSpritesPosition();
 void InitializeSprites();
-void DrawCharacter(char char_, u16 pos_x, u16 pos_y);
+void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y);
+void DrawText(unsigned char *text, s16 pos_x, s16 pos_y);
 void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y);
 
 void LoadTutorialPosts();
 void GeneratePosts();
+post_t GeneratePost();
 void PopAndPushPost();
 void PopAndPushTutorial();
-post_t GetRandomPost();
+u16 GetRandomPostId();
 u16 GetRandomProfilePic();
 u16 GetRandomPostPic();
 void ProcessButtons();
