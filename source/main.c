@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "gba.h"
 #include "sprites.h"
 #include "main.h"
@@ -7,7 +8,6 @@
 u16 game_state = GAME;
 
 // Gameplay globals
-database_t database[100];
 post_t posts[4];
 u16 score = 0;
 u16 countdown = COUNTDOWN_START_VAL;
@@ -34,36 +34,22 @@ u16 palette = 0;
 
 int main()
 {
-	u16 loop;
-
 	SetMode(MODE_1 | OBJ_ENABLE | OBJ_MAP_2D);
 
-	for (loop = 0; loop < 256; loop++)
-		OBJ_PaletteMem[loop] = tileset_palette[loop];
+	for (u16 i = 0; i < 256; i++)
+		OBJ_PaletteMem[i] = tileset_palette[i];
 
 	InitializeSprites();
 	ResetSpritesPosition();
 
 	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
 
-	// for (;;)
-	// {
-	// 	MoveMediumSprite(MEDIUM_SPR_START_OFFSET, 16, 16);
-	// 	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 1, 16, 64);
-	// 	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 2, 16, 112);
-
-	// 	MoveBigSprite(BIG_SPR_START_OFFSET, 48, 16);
-	// 	MoveBigSprite(BIG_SPR_START_OFFSET + 1, 48, 64);
-	// 	MoveBigSprite(BIG_SPR_START_OFFSET + 2, 48, 112);
-
-	// 	WaitForVsync();
-	// 	CopyOAM();
-	// }
-
 	for (ever)
 	{
 		_Update();
 		_Draw();
+		WaitForVsync();
+		CopyOAM();
 	}
 
 	return 0;
@@ -116,26 +102,31 @@ void InitializeSprites()
 	}
 }
 
-void MoveSmallSprite(u16 id, u16 pos_x, u16 pos_y)
+void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y)
 {
+	if (pos_x < 0)
+		pos_x = 256;
+
 	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[id].attribute1 = SIZE_8 | pos_x;
 }
 
-void MoveMediumSprite(u16 id, u16 pos_x, u16 pos_y)
+void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y)
 {
+	if (pos_x < 0)
+		pos_x = 256;
+
 	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[id].attribute1 = SIZE_16 | pos_x;
 }
 
-void MoveBigSprite(u16 id, u16 pos_x, u16 pos_y)
+void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y)
 {
+	if (pos_x < 0)
+		pos_x = 256;
+
 	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[id].attribute1 = SIZE_32 | pos_x;
-}
-
-void LoadDatabase()
-{
 }
 
 void LoadTutorialPost()
@@ -144,22 +135,80 @@ void LoadTutorialPost()
 
 void GeneratePosts()
 {
+	// for (u16 i = 0; i < 4; i++)
+	// {
+	// 	posts[i] =
+	// }
 }
 
 void PopAndPushPost()
 {
+	// I need to pop post after the animation finishes
+	posts[0] = posts[1];
+	posts[1] = posts[2];
+	posts[2] = posts[3];
+	// posts[3] = database[GetRandomPostId()];
 }
 
 void PopAndPushTutorial()
 {
 }
 
+post_t GetRandomPost()
+{
+	return DATABASE[rand() % POSTS_NUM];
+}
+
+u16 GetRandomProfilePic()
+{
+	return MEDIUM_SPR_START_OFFSET + (rand() % MEDIUM_SPR_NUM);
+}
+
+u16 GetRandomPostPic()
+{
+	return BIG_SPR_START_OFFSET + (rand() % BIG_SPR_NUM);
+}
+
 void ProcessButtons()
 {
+	if (is_animating_swipe == FALSE && menu_lock == FALSE)
+	{
+		if (keyDown(KEY_LEFT))
+		{
+			swipe_direction = -1;
+			is_animating_swipe = TRUE;
+			// sfx correct
+			menu_lock = TRUE;
+		}
+
+		if (keyDown(KEY_RIGHT))
+		{
+			swipe_direction = 1;
+			is_animating_swipe = TRUE;
+			// sfx correct
+			menu_lock = TRUE;
+		}
+	}
+	else
+	{
+		menu_lock = FALSE;
+	}
 }
 
 void ProcessFeedAnimation()
 {
+	if (is_animating_feed == TRUE)
+	{
+		posts_y_offset -= 10;
+	}
+
+	if (posts_y_offset <= -40)
+	{
+		is_animating_feed = FALSE;
+		// post animation ended
+		posts_x_offset = 0;
+		posts_y_offset = 0;
+	}
 }
 
 void ProcessSwipeAnimation()
@@ -235,7 +284,6 @@ void ChangeState(u16 new_state)
 
 void ResetGameState()
 {
-	LoadDatabase();
 	GeneratePosts();
 	score = 0;
 	countdown = COUNTDOWN_START_VAL;
@@ -244,6 +292,32 @@ void ResetGameState()
 	is_animating_swipe = FALSE;
 	posts_x_offset = 0;
 	posts_y_offset = 0;
+}
+
+void DrawPost(s16 x_offset, s16 y_offset, post_t *post)
+{
+	// Post bg
+	// Profile pic
+	MoveMediumSprite(post->profile_id, 8 + x_offset, 8 + y_offset);
+	// Image
+	MoveBigSprite(post->pic_id, 32 + x_offset, 8 + y_offset);
+	// Text
+}
+
+void DrawPosts()
+{
+	s16 y_offset = posts_y_offset + 16;
+	s16 x_offset = posts_x_offset;
+
+	MoveMediumSprite(MEDIUM_SPR_START_OFFSET, 16 + x_offset, 0 + y_offset);
+	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 1, 16, 40 + y_offset);
+	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 2, 16, 80 + y_offset);
+	MoveMediumSprite(MEDIUM_SPR_START_OFFSET + 3, 16, 120 + y_offset);
+
+	MoveBigSprite(BIG_SPR_START_OFFSET, 48 + x_offset, 0 + y_offset);
+	MoveBigSprite(BIG_SPR_START_OFFSET + 1, 48, 40 + y_offset);
+	MoveBigSprite(BIG_SPR_START_OFFSET + 2, 48, 80 + y_offset);
+	MoveBigSprite(BIG_SPR_START_OFFSET + 3, 48, 120 + y_offset);
 }
 
 void StartGameMusic()
@@ -264,6 +338,11 @@ void _Update()
 	}
 	else if (game_state == GAME)
 	{
+		ProcessButtons();
+		ProcessFeedAnimation();
+		ProcessSwipeAnimation();
+		DecreaseCountdown();
+		// EvaluateGameOver();
 	}
 	else if (game_state == GAME_OVER)
 	{
@@ -283,6 +362,7 @@ void _Draw()
 	}
 	else if (game_state == GAME)
 	{
+		DrawPosts();
 	}
 	else if (game_state == GAME_OVER)
 	{
