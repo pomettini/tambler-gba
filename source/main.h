@@ -7,6 +7,9 @@
     ;        \
     ;
 
+#define SPRITE_NUM 128
+#define POST_NUM 3
+
 #define SMALL_SPR_NUM 16
 #define MEDIUM_SPR_NUM 8
 #define BIG_SPR_NUM 4
@@ -28,6 +31,8 @@
 #define COLOR_WHITE 0x01
 #define COLOR_RED 0x0A
 #define COLOR_GREEN 0x0D
+
+#define TEXT_PALETTE_ADDR 0xFF
 
 enum states
 {

@@ -13,7 +13,7 @@
 u16 game_state = GAME;
 
 // Gameplay globals
-post_t posts[3];
+post_t posts[POST_NUM];
 u16 score = 0;
 s16 countdown = COUNTDOWN_START_VAL;
 s16 countdown_ = COUNTDOWN_SECOND_START_VAL;
@@ -33,7 +33,7 @@ const u16 countdown_speed = 3;
 const u16 text_y_offset = -4;
 
 // GBA stuff
-OAMEntry sprites[128];
+OAMEntry sprites[SPRITE_NUM];
 
 u16 pos_x = 0;
 u16 pos_y = 0;
@@ -68,7 +68,7 @@ void CopyOAM()
 	u16 loop;
 	u16 *temp;
 	temp = (u16 *)sprites;
-	for (loop = 0; loop < 128 * 4; loop++)
+	for (loop = 0; loop < SPRITE_NUM * 4; loop++)
 	{
 		OAM_Mem[loop] = temp[loop];
 	}
@@ -76,10 +76,10 @@ void CopyOAM()
 
 void ResetSpritesPosition()
 {
-	for (int x = 0; x < 128; x++)
+	for (int x = 0; x < SPRITE_NUM; x++)
 	{
-		sprites[x].attribute0 = 160;
-		sprites[x].attribute1 = 240;
+		sprites[x].attribute0 = SCREEN_HEIGHT;
+		sprites[x].attribute1 = SCREEN_WIDTH;
 	}
 }
 
@@ -124,8 +124,8 @@ void CleanCharacterSprites()
 {
 	for (u16 i = TEXT_SPR_OFFSET + current_char; i < TEXT_SPR_OFFSET + LETTERS_MAX; i++)
 	{
-		sprites[i].attribute0 = 160;
-		sprites[i].attribute1 = 240;
+		sprites[i].attribute0 = SCREEN_HEIGHT;
+		sprites[i].attribute1 = SCREEN_WIDTH;
 	}
 }
 
@@ -167,7 +167,7 @@ void LoadTutorialPosts()
 
 void GeneratePosts()
 {
-	for (u16 i = 0; i < 3; i++)
+	for (u16 i = 0; i < POST_NUM; i++)
 		posts[i] = GeneratePost();
 }
 
@@ -276,7 +276,7 @@ void ProcessSwipeAnimation()
 		posts_x_offset += 16 * swipe_direction;
 	}
 
-	if (posts_x_offset <= -240 || posts_x_offset >= 240)
+	if (posts_x_offset <= -SCREEN_WIDTH || posts_x_offset >= SCREEN_WIDTH)
 	{
 		is_animating_feed = TRUE;
 		is_animating_swipe = FALSE;
