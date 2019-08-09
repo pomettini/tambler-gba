@@ -32,6 +32,10 @@
 #define COLOR_RED 0x0A
 #define COLOR_GREEN 0x0D
 
+#define TEXT_COLOR_BLACK 0x0000
+#define TEXT_COLOR_WHITE 0xFFFF
+
+#define POST_BG_PALETTE_ADDR 0xFE
 #define TEXT_PALETTE_ADDR 0xFF
 
 enum states
@@ -130,6 +134,7 @@ void DrawPost(s16 x_offset, s16 y_offset, post_t *post);
 void DrawPosts();
 void DrawPostBg(u16 id, s16 pos_x, s16 pos_y);
 void DrawCountdownBar();
+void SetTextColor(int color);
 void StartGameMusic();
 
 void EvaluateEndTutorial();
@@ -142,6 +147,7 @@ void DrawMenuScreen();
 void DrawTutorialPosts();
 void DrawGameOverScreen();
 void DrawCreditsScreen();
+
 
 void _Init();
 void _Update();

@@ -475,6 +475,11 @@ void DrawCreditsScreen()
 	DrawText("PREMI R PER USCIRE", 0, 40);
 }
 
+void SetTextColor(int color)
+{
+	OBJ_PaletteMem[TEXT_PALETTE_ADDR] = color;
+}
+
 void StartGameMusic()
 {
 }
@@ -486,17 +491,23 @@ void _Init()
 
 	REG_BG0CNT = 0x1F83;
 
+	// Copy palette data
 	for (u16 i = 0; i < 256; i++)
 	{
 		OBJ_PaletteMem[i] = tileset_palette[i];
 		BG_PaletteMem[i] = game_background_palette[i];
 	}
 
+	// Copy sprite and bg data
 	memcpy(FrontBuffer, game_background_data, sizeof(game_background_data));
 	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
 
-	memset(OAM_Data + 4096, COLOR_WHITE, 4096);
+	// Put last part of spritesheet to white color
+	OBJ_PaletteMem[POST_BG_PALETTE_ADDR] = TEXT_COLOR_WHITE;
+	memset(OAM_Data + 4096, POST_BG_PALETTE_ADDR, 4096);
+
 	// Was 4096
+	// Copy font data (font palette is 0xFF)
 	memcpy(OAM_Data + 8192, font_data, sizeof(font_data));
 
 	InitializeSprites();
@@ -549,11 +560,13 @@ void _Draw()
 	}
 	else if (game_state == GAME)
 	{
+		SetTextColor(TEXT_COLOR_BLACK);
 		DrawPosts();
 		DrawCountdownBar();
 	}
 	else if (game_state == GAME_OVER)
 	{
+		SetTextColor(TEXT_COLOR_WHITE);
 		DrawGameOverScreen();
 	}
 	else if (game_state == CREDITS)
