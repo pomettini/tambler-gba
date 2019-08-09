@@ -7,13 +7,16 @@
 #include "game_background.h"
 #include "main.h"
 
+// TODO: Remove all magic numbers
+
 // States
 u16 game_state = GAME;
 
 // Gameplay globals
-post_t posts[4];
+post_t posts[3];
 u16 score = 0;
 s16 countdown = COUNTDOWN_START_VAL;
+s16 countdown_ = COUNTDOWN_SECOND_START_VAL;
 
 // Animation globals
 u16 menu_lock = FALSE;
@@ -26,8 +29,8 @@ s16 posts_y_offset = 0;
 s16 posts_x_offset = 0;
 
 // Const globals
-const u16 countdown_speed = 1;
-const u16 text_y_offset = -3;
+const u16 countdown_speed = 3;
+const u16 text_y_offset = -4;
 
 // GBA stuff
 OAMEntry sprites[128];
@@ -45,27 +48,7 @@ int main()
 {
 	SetMode(MODE_0 | BG0_ENABLE | OBJ_ENABLE | OBJ_MAP_2D);
 
-	// TODO: Find a way to generate a random seed
-	srand(10);
-
-	REG_BG0CNT = 0x1F83;
-
-	for (u16 i = 0; i < 256; i++)
-	{
-		OBJ_PaletteMem[i] = tileset_palette[i];
-		BG_PaletteMem[i] = game_background_palette[i];
-	}
-
-	memcpy(FrontBuffer, game_background_data, sizeof(game_background_data));
-	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
-	// Was 4096
-	memcpy(OAM_Data + 8192, font_data, sizeof(font_data));
-
-	InitializeSprites();
-
-	ResetSpritesPosition();
-
-	GeneratePosts();
+	_Init();
 
 	for (ever)
 	{
@@ -95,8 +78,8 @@ void ResetSpritesPosition()
 {
 	for (int x = 0; x < 128; x++)
 	{
-		sprites[x].attribute0 = 160; //y > 159
-		sprites[x].attribute1 = 240; //x > 239
+		sprites[x].attribute0 = 160;
+		sprites[x].attribute1 = 240;
 	}
 }
 
@@ -108,22 +91,6 @@ void InitializeSprites()
 		sprites[i].attribute0 = COLOR_256 | SQUARE | i * 8;
 		sprites[i].attribute1 = SIZE_8 | i * 8;
 		sprites[i].attribute2 = 2 + (i * 2);
-	}
-
-	// Init medium sprites
-	for (u16 i = 0; i < 8; i++)
-	{
-		sprites[i + 16].attribute0 = COLOR_256 | SQUARE | i * 16;
-		sprites[i + 16].attribute1 = SIZE_16 | i * 16;
-		sprites[i + 16].attribute2 = 64 + (i * 4);
-	}
-
-	// Init big sprites
-	for (u16 i = 0; i < 4; i++)
-	{
-		sprites[i + 24].attribute0 = COLOR_256 | SQUARE | i * 32;
-		sprites[i + 24].attribute1 = SIZE_32 | i * 32;
-		sprites[i + 24].attribute2 = 128 + (i * 8);
 	}
 }
 
@@ -145,10 +112,20 @@ void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y)
 void DrawText(unsigned char *text, s16 pos_x, s16 pos_y)
 {
 	u16 curr_pos_x = pos_x;
+
 	while (*text != '\0')
 	{
 		DrawCharacter(*text++, curr_pos_x, pos_y);
 		curr_pos_x += 8;
+	}
+}
+
+void CleanCharacterSprites()
+{
+	for (u16 i = TEXT_SPR_OFFSET + current_char; i < TEXT_SPR_OFFSET + LETTERS_MAX; i++)
+	{
+		sprites[i].attribute0 = 160;
+		sprites[i].attribute1 = 240;
 	}
 }
 
@@ -179,28 +156,47 @@ void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y)
 	sprites[id].attribute1 = SIZE_32 | pos_x;
 }
 
+void SetSprite(u16 oam_id, u16 sprite_id)
+{
+	sprites[oam_id].attribute2 = sprite_id;
+}
+
 void LoadTutorialPosts()
 {
 }
 
 void GeneratePosts()
 {
-	for (u16 i = 0; i < 4; i++)
-	{
+	for (u16 i = 0; i < 3; i++)
 		posts[i] = GeneratePost();
-	}
 }
 
 post_t GeneratePost()
 {
-	u16 random_post = GetRandomPostId();
+	u16 random_id = GetRandomPostId();
+
 	post_t post = {
-		"10 motivi",
-		"Per smettere",
-		"Di fumare",
-		TRUE,
+		"",
+		"",
+		"",
+		DATABASE[random_id].is_valid,
 		GetRandomProfilePic(),
 		GetRandomPostPic()};
+
+	// TODO: Find a way to do it in struct initialization
+	memcpy(
+		&post.first,
+		DATABASE[random_id].first,
+		TEXT_LEN_MAX);
+	memcpy(
+		&post.second,
+		DATABASE[random_id].second,
+		TEXT_LEN_MAX);
+	memcpy(
+		&post.third,
+		DATABASE[random_id].third,
+		TEXT_LEN_MAX);
+
 	return post;
 }
 
@@ -209,8 +205,7 @@ void PopAndPushPost()
 	// I need to pop post after the animation finishes
 	posts[0] = posts[1];
 	posts[1] = posts[2];
-	posts[2] = posts[3];
-	posts[3] = GeneratePost();
+	posts[2] = GeneratePost();
 }
 
 void PopAndPushTutorial()
@@ -224,12 +219,12 @@ u16 GetRandomPostId()
 
 u16 GetRandomProfilePic()
 {
-	return MEDIUM_SPR_START_OFFSET + (rand() % MEDIUM_SPR_NUM);
+	return 64 + ((rand() % MEDIUM_SPR_NUM) * 4);
 }
 
 u16 GetRandomPostPic()
 {
-	return BIG_SPR_START_OFFSET + (rand() % BIG_SPR_NUM);
+	return 128 + ((rand() % BIG_SPR_NUM) * 8);
 }
 
 void ProcessButtons()
@@ -268,7 +263,7 @@ void ProcessFeedAnimation()
 	if (posts_y_offset <= -40)
 	{
 		is_animating_feed = FALSE;
-		// post animation ended
+		PostAnimationEnded();
 		posts_x_offset = 0;
 		posts_y_offset = 0;
 	}
@@ -290,29 +285,35 @@ void ProcessSwipeAnimation()
 
 void DecreaseCountdown()
 {
+	countdown_ -= (score + 1);
+
+	if (countdown_ > 0)
+		return;
+	else
+		countdown_ = COUNTDOWN_SECOND_START_VAL;
+
 	if (is_animating_swipe == FALSE)
-	{
-		countdown -= countdown_speed * (score + 1);
-	}
+		countdown -= countdown_speed;
 }
 
 void PostAnimationEnded()
 {
 	if (game_state == TUTORIAL)
 	{
-		// pop and push tutorial
+		PopAndPushTutorial();
 	}
 
 	if (game_state == GAME)
 	{
-		// evaluate content
-		// pop and push post
+		EvaluateContent(&posts[0]);
+		PopAndPushPost();
 	}
 }
 
 void EvaluateContent(post_t *post)
 {
-	if (post->is_valid == TRUE && swipe_direction == 1 || post->is_valid == FALSE && swipe_direction == -1)
+	if (post->is_valid == TRUE && swipe_direction == 1 ||
+		post->is_valid == FALSE && swipe_direction == -1)
 	{
 		score++;
 		countdown = COUNTDOWN_START_VAL;
@@ -343,6 +344,8 @@ void ChangeState(u16 new_state)
 		ResetGameState();
 		StartGameMusic();
 	}
+
+	ResetSpritesPosition();
 }
 
 void ResetGameState()
@@ -362,9 +365,11 @@ void DrawPost(s16 x_offset, s16 y_offset, post_t *post)
 	// Post bg
 	DrawPostBg(current_post_id, x_offset, y_offset);
 	// Profile pic
-	MoveMediumSprite(post->profile_id, 8 + x_offset, 8 + y_offset);
+	SetSprite(16 + current_post_id, post->profile_id);
+	MoveMediumSprite(16 + current_post_id, 8 + x_offset, 8 + y_offset);
 	// Image
-	MoveBigSprite(post->pic_id, 32 + x_offset, 8 + y_offset);
+	SetSprite(21 + current_post_id, post->pic_id);
+	MoveBigSprite(21 + current_post_id, 32 + x_offset, 8 + y_offset);
 	// Text
 	DrawText(
 		post->first,
@@ -392,6 +397,9 @@ void DrawPosts()
 	DrawPost(20 + x_offset, 0 + y_offset, &posts[0]);
 	DrawPost(20, 40 + y_offset, &posts[1]);
 	DrawPost(20, 80 + y_offset, &posts[2]);
+
+	// Three posts is enough
+
 	// DrawPost(20, 120 + y_offset, &posts[3]);
 }
 
@@ -402,27 +410,69 @@ void DrawPostBg(u16 id, s16 pos_x, s16 pos_y)
 
 	sprites[120 + id].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 8 + pos_y;
 	sprites[120 + id].attribute1 = SIZE_32 | ROTDATA(0) | 64 + pos_x;
-	sprites[120 + id].attribute2 = 256 + 128;
+	sprites[120 + id].attribute2 = 256;
 
 	sprites[121 + id].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 8 + pos_y;
 	sprites[121 + id].attribute1 = SIZE_32 | ROTDATA(0) | 128 + pos_x;
-	sprites[121 + id].attribute2 = 256 + 128;
+	sprites[121 + id].attribute2 = 256;
 }
 
 void DrawCountdownBar()
 {
 	sprites[118].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 142;
 	sprites[118].attribute1 = SIZE_64 | ROTDATA(0) | countdown - 120 - 16;
-	sprites[118].attribute2 = 256 + 128;
+	sprites[118].attribute2 = 256;
 
 	sprites[119].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 142;
 	sprites[119].attribute1 = SIZE_64 | ROTDATA(0) | countdown - 240 - 16;
-	sprites[119].attribute2 = 256 + 128;
+	sprites[119].attribute2 = 256;
 
-	// char countdown_str[12];
-	// sprintf(countdown_str, "%i", countdown);
+	// char text[12];
+	// sprintf(text, "%i", score);
 
-	// DrawText(countdown_str, 0, 0);
+	// DrawText(text, 0, 0);
+}
+
+void EvaluateEndTutorial()
+{
+}
+
+void ProcessMenuScreen()
+{
+}
+
+void ProcessGameOverScreen()
+{
+}
+
+void ProcessCreditsScreen()
+{
+}
+
+void DrawMenuScreen()
+{
+}
+
+void DrawTutorialPosts()
+{
+}
+
+void DrawGameOverScreen()
+{
+	DrawText("GAME OVER", 0, 0);
+	DrawText("SEI STATO CACCIATO!", 0, 8);
+	DrawText("IL TUO PUNTEGGIO E':", 0, 16);
+	DrawText("PREMI R PER RIPROVARE", 0, 24);
+}
+
+void DrawCreditsScreen()
+{
+	DrawText("TAMBLER THE GAME", 0, 0);
+	DrawText("A PIERETTINI PRODUCTION", 0, 8);
+	DrawText("ART: PIERA FALCONE", 0, 16);
+	DrawText("CODE: GIORGIO POMETTINI", 0, 24);
+	DrawText("MUSIC: TECLA ZORZI", 0, 32);
+	DrawText("PREMI R PER USCIRE", 0, 40);
 }
 
 void StartGameMusic()
@@ -431,15 +481,43 @@ void StartGameMusic()
 
 void _Init()
 {
+	// TODO: Find a way to generate a random seed
+	srand(10);
+
+	REG_BG0CNT = 0x1F83;
+
+	for (u16 i = 0; i < 256; i++)
+	{
+		OBJ_PaletteMem[i] = tileset_palette[i];
+		BG_PaletteMem[i] = game_background_palette[i];
+	}
+
+	memcpy(FrontBuffer, game_background_data, sizeof(game_background_data));
+	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
+
+	memset(OAM_Data + 4096, COLOR_WHITE, 4096);
+	// Was 4096
+	memcpy(OAM_Data + 8192, font_data, sizeof(font_data));
+
+	InitializeSprites();
+
+	ResetSpritesPosition();
+
+	GeneratePosts();
 }
 
 void _Update()
 {
 	if (game_state == MENU)
 	{
+		ProcessMenuScreen();
 	}
 	else if (game_state == TUTORIAL)
 	{
+		ProcessButtons();
+		ProcessFeedAnimation();
+		ProcessSwipeAnimation();
+		EvaluateEndTutorial();
 	}
 	else if (game_state == GAME)
 	{
@@ -451,9 +529,11 @@ void _Update()
 	}
 	else if (game_state == GAME_OVER)
 	{
+		ProcessGameOverScreen();
 	}
 	else if (game_state == CREDITS)
 	{
+		ProcessCreditsScreen();
 	}
 }
 
@@ -461,9 +541,11 @@ void _Draw()
 {
 	if (game_state == MENU)
 	{
+		DrawMenuScreen();
 	}
 	else if (game_state == TUTORIAL)
 	{
+		DrawTutorialPosts();
 	}
 	else if (game_state == GAME)
 	{
@@ -472,8 +554,12 @@ void _Draw()
 	}
 	else if (game_state == GAME_OVER)
 	{
+		DrawGameOverScreen();
 	}
 	else if (game_state == CREDITS)
 	{
+		DrawCreditsScreen();
 	}
+
+	CleanCharacterSprites();
 }

@@ -14,13 +14,20 @@
 #define SMALL_SPR_START_OFFSET 0
 #define MEDIUM_SPR_START_OFFSET 16
 #define BIG_SPR_START_OFFSET 24
+#define TEXT_SPR_OFFSET 28
+
+#define POSTS_NUM 34
 
 #define COUNTDOWN_START_VAL 240
-#define POSTS_NUM 4
+#define COUNTDOWN_SECOND_START_VAL 20
 #define TEXT_LEN_MAX 13
 #define LETTERS_NUM 26
-// Was 92
-#define LETTERS_MAX 90
+#define LETTERS_MAX 90 // Was 92
+
+#define COLOR_BLACK 0x15
+#define COLOR_WHITE 0x01
+#define COLOR_RED 0x0A
+#define COLOR_GREEN 0x0D
 
 enum states
 {
@@ -49,14 +56,53 @@ typedef struct post
     u16 pic_id;
 } post_t;
 
+const post_t DATABASE[] = {
+    {"DONNA CALDA", "A 2 KM", "DA TE", FALSE},
+    {"VENDESI", "SOPRAMMOBILI", "USATI", TRUE},
+    {"CLICCA QUI", "PER IL", "CA**O", FALSE},
+    {"PASSATA DI", "POMODORO", "TRE PER DUE", TRUE},
+    {"VENDO", "LA DROGA", "", FALSE},
+    {"QUI FOTO", "DI GATTINI", "", TRUE},
+    {"QUI FOTO", "DI", "CAGNOLINI", TRUE},
+    {"BISCOTTI", "IN OFFERTA", "", TRUE},
+    {"SITO", "BELLISSIMO", "SUI MEMINI", TRUE},
+    {"GUARDATE CHE", "BELLE LE", "MIE TETTE", FALSE},
+    {"NUOVISSIMI", "GIOCHI PER", "PLAYSTATION", TRUE},
+    {"ALTRI", "MEMINI", "DIVERTENTI", TRUE},
+    {"QUI BATTUTE", "SUI CODER", "", TRUE},
+    {"LEGGI", "HENTAI", "ONLINE", FALSE},
+    {"NUOVO MODO", "ALLUNGAMENTO", "DEL PENE", FALSE},
+    {"VISITE", "GRATUITE", "UROLOGO", TRUE},
+    {"NUOVA DIETA", "DI KYLIE", "JENNER", TRUE},
+    {"QUI KIM", "KARDASHIAN", "NUDA", FALSE},
+    {"JASON MOMOA", "LEAKED", "PHOTO", FALSE},
+    {"10 MOTIVI", "PER SMETTERE", "DI FUMARE", TRUE},
+    {"LE MIGLIORI", "10 METE", "EUROPEE", TRUE},
+    {"MOBILI", "IKEA IN", "IPER OFFERTA", TRUE},
+    {"UOMO CALDO", "A 3 KM", "DA TE", FALSE},
+    {"COPPIA DI", "SCAMBISTI", "CERCA DONNA", FALSE},
+    {"SITO PER", "ARTICOLI", "DA PESCA", TRUE},
+    {"SITO PER", "OGGETTI", "CINESISSIMI", TRUE},
+    {"FAMMI VEDERE", "I TUOI", "PIEDINI", FALSE},
+    {"NUOVE", "RICETTINE SU", "VRDBASILICO", TRUE},
+    {"PREVENDITA", "CONCERTO DI", "GG D'ALESSIO", TRUE},
+    {"VENDITA", "ACCESSORI DI", "HELLO KITTY", TRUE},
+    {"VIDEO OSE'", "PER", "OMOSESSUALI", FALSE},
+    {"FOTO DI", "PENI", "EXTRA-LARGE", FALSE},
+    {"RIHANNA", "LEAKED", "PHOTO", FALSE},
+    {"SITO DI", "BARZELLETTE", "DIVERTENTI", TRUE},
+};
+
 void CopyOAM();
 void ResetSpritesPosition();
 void InitializeSprites();
 void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y);
 void DrawText(unsigned char *text, s16 pos_x, s16 pos_y);
+void CleanCharacterSprites();
 void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y);
+void SetSprite(u16 oam_id, u16 sprite_id);
 
 void LoadTutorialPosts();
 void GeneratePosts();
@@ -81,12 +127,17 @@ void DrawPostBg(u16 id, s16 pos_x, s16 pos_y);
 void DrawCountdownBar();
 void StartGameMusic();
 
+void EvaluateEndTutorial();
+
+void ProcessMenuScreen();
+void ProcessGameOverScreen();
+void ProcessCreditsScreen();
+
+void DrawMenuScreen();
+void DrawTutorialPosts();
+void DrawGameOverScreen();
+void DrawCreditsScreen();
+
 void _Init();
 void _Update();
 void _Draw();
-
-const post_t DATABASE[] = {
-    {"DONNA CALDA", "A 2 KM", "DA TE", FALSE},
-    {"VENDESI", "SOPRAMMOBILI", "USATI", TRUE},
-    {"CLICCA QUI", "PER IL", "CA**O", FALSE},
-    {"PASSATA DI", "POMODORO", "TRE PER DUE", TRUE}};

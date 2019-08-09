@@ -34,7 +34,9 @@
 			"string.h": "c",
 			"game_background.h": "c",
 			"general.h": "c",
-			"rng.h": "c"
+			"rng.h": "c",
+			"stdio.h": "c",
+			"gba_keys.h": "c"
 		},
 		"cSpell.enabled": false
 	}
