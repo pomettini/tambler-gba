@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
+#include <stdio.h>
 #include "gba.h"
 #include "sprites.h"
 #include "font.h"
@@ -13,7 +13,7 @@ u16 game_state = GAME;
 // Gameplay globals
 post_t posts[4];
 u16 score = 0;
-u16 countdown = COUNTDOWN_START_VAL;
+s16 countdown = COUNTDOWN_START_VAL;
 
 // Animation globals
 u16 menu_lock = FALSE;
@@ -43,10 +43,10 @@ u16 current_post_id = 0;
 
 int main()
 {
-	SetMode(MODE_1 | BG0_ENABLE | OBJ_ENABLE | OBJ_MAP_2D);
+	SetMode(MODE_0 | BG0_ENABLE | OBJ_ENABLE | OBJ_MAP_2D);
 
 	// TODO: Find a way to generate a random seed
-	srand(0);
+	srand(10);
 
 	REG_BG0CNT = 0x1F83;
 
@@ -195,9 +195,9 @@ post_t GeneratePost()
 {
 	u16 random_post = GetRandomPostId();
 	post_t post = {
-		"10 MOTIVI",
-		"PER SMETTERE",
-		"DI FUMARE",
+		"10 motivi",
+		"Per smettere",
+		"Di fumare",
 		TRUE,
 		GetRandomProfilePic(),
 		GetRandomPostPic()};
@@ -392,7 +392,7 @@ void DrawPosts()
 	DrawPost(20 + x_offset, 0 + y_offset, &posts[0]);
 	DrawPost(20, 40 + y_offset, &posts[1]);
 	DrawPost(20, 80 + y_offset, &posts[2]);
-	DrawPost(20, 120 + y_offset, &posts[3]);
+	// DrawPost(20, 120 + y_offset, &posts[3]);
 }
 
 void DrawPostBg(u16 id, s16 pos_x, s16 pos_y)
@@ -407,6 +407,22 @@ void DrawPostBg(u16 id, s16 pos_x, s16 pos_y)
 	sprites[121 + id].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 8 + pos_y;
 	sprites[121 + id].attribute1 = SIZE_32 | ROTDATA(0) | 128 + pos_x;
 	sprites[121 + id].attribute2 = 256 + 128;
+}
+
+void DrawCountdownBar()
+{
+	sprites[118].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 142;
+	sprites[118].attribute1 = SIZE_64 | ROTDATA(0) | countdown - 120 - 16;
+	sprites[118].attribute2 = 256 + 128;
+
+	sprites[119].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 142;
+	sprites[119].attribute1 = SIZE_64 | ROTDATA(0) | countdown - 240 - 16;
+	sprites[119].attribute2 = 256 + 128;
+
+	// char countdown_str[12];
+	// sprintf(countdown_str, "%i", countdown);
+
+	// DrawText(countdown_str, 0, 0);
 }
 
 void StartGameMusic()
@@ -431,7 +447,7 @@ void _Update()
 		ProcessFeedAnimation();
 		ProcessSwipeAnimation();
 		DecreaseCountdown();
-		// EvaluateGameOver();
+		EvaluateGameOver();
 	}
 	else if (game_state == GAME_OVER)
 	{
@@ -452,6 +468,7 @@ void _Draw()
 	else if (game_state == GAME)
 	{
 		DrawPosts();
+		DrawCountdownBar();
 	}
 	else if (game_state == GAME_OVER)
 	{
