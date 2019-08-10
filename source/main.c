@@ -8,12 +8,14 @@
 #include "main.h"
 
 // TODO: Remove all magic numbers
+// TODO: Add sprite flipping
 
 // States
-u16 game_state = GAME;
+u16 game_state = MENU;
 
 // Gameplay globals
 post_t posts[POST_NUM];
+tutorial_post_t tutorial_posts[TUTORIAL_POST_NUM];
 u16 score = 0;
 s16 countdown = COUNTDOWN_START_VAL;
 s16 countdown_ = COUNTDOWN_SECOND_START_VAL;
@@ -171,6 +173,11 @@ void GeneratePosts()
 		posts[i] = GeneratePost();
 }
 
+void InsertTutorialPosts()
+{
+	
+}
+
 post_t GeneratePost()
 {
 	u16 random_id = GetRandomPostId();
@@ -210,6 +217,14 @@ void PopAndPushPost()
 
 void PopAndPushTutorial()
 {
+	tutorial_post_t last_post = {"", "", "", TRUE};
+
+	// TODO: Refactor this
+	tutorial_posts[0] = tutorial_posts[1];
+	tutorial_posts[1] = tutorial_posts[2];
+	tutorial_posts[2] = tutorial_posts[3];
+	tutorial_posts[3] = tutorial_posts[4];
+	tutorial_posts[4] = last_post;
 }
 
 u16 GetRandomPostId()
@@ -433,32 +448,62 @@ void DrawCountdownBar()
 	// DrawText(text, 0, 0);
 }
 
-void EvaluateEndTutorial()
-{
-}
-
 void ProcessMenuScreen()
 {
+	if (keyDown(KEY_R) && menu_lock == FALSE)
+		ChangeState(TUTORIAL);
+	else if (keyDown(KEY_L) && menu_lock == FALSE)
+		ChangeState(CREDITS);
+	else
+		menu_lock = FALSE;
 }
 
 void ProcessGameOverScreen()
 {
+	if (keyDown(KEY_R) && menu_lock == FALSE)
+		ChangeState(GAME);
+	else
+		menu_lock = FALSE;
 }
 
 void ProcessCreditsScreen()
+{
+	if (keyDown(KEY_R) && menu_lock == FALSE)
+		ChangeState(MENU);
+	else
+		menu_lock = FALSE;
+}
+
+void EvaluateEndTutorial()
 {
 }
 
 void DrawMenuScreen()
 {
+	SetTextColor(COLOR_WHITE);
+
+	// bg
+	// falling hearts draw
+	// title screen
+	DrawText("TAMBLER", 0, 0);
+	// subtitle
+	DrawText("(PULISCI L'INTERNET)", 0, 8);
+
+	DrawText("PREMI R PER INIZIARE", 0, 16);
+	DrawText("PREMI L PER I CREDITS", 0, 24);
 }
 
 void DrawTutorialPosts()
 {
+	SetTextColor(COLOR_WHITE);
+
+	DrawText("(TUTORIAL)", 0, 0);
 }
 
 void DrawGameOverScreen()
 {
+	SetTextColor(COLOR_WHITE);
+
 	DrawText("GAME OVER", 0, 0);
 	DrawText("SEI STATO CACCIATO!", 0, 8);
 	DrawText("IL TUO PUNTEGGIO E':", 0, 16);
@@ -467,6 +512,8 @@ void DrawGameOverScreen()
 
 void DrawCreditsScreen()
 {
+	SetTextColor(COLOR_WHITE);
+
 	DrawText("TAMBLER THE GAME", 0, 0);
 	DrawText("A PIERETTINI PRODUCTION", 0, 8);
 	DrawText("ART: PIERA FALCONE", 0, 16);
@@ -503,7 +550,7 @@ void _Init()
 	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
 
 	// Put last part of spritesheet to white color
-	OBJ_PaletteMem[POST_BG_PALETTE_ADDR] = TEXT_COLOR_WHITE;
+	OBJ_PaletteMem[POST_BG_PALETTE_ADDR] = COLOR_WHITE;
 	memset(OAM_Data + 4096, POST_BG_PALETTE_ADDR, 4096);
 
 	// Was 4096
@@ -560,13 +607,13 @@ void _Draw()
 	}
 	else if (game_state == GAME)
 	{
-		SetTextColor(TEXT_COLOR_BLACK);
+		SetTextColor(COLOR_BLACK);
 		DrawPosts();
 		DrawCountdownBar();
+		DrawText("PREMI R PER AVANZARE", 0, 8);
 	}
 	else if (game_state == GAME_OVER)
 	{
-		SetTextColor(TEXT_COLOR_WHITE);
 		DrawGameOverScreen();
 	}
 	else if (game_state == CREDITS)

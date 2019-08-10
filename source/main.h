@@ -9,6 +9,7 @@
 
 #define SPRITE_NUM 128
 #define POST_NUM 3
+#define TUTORIAL_POST_NUM 5
 
 #define SMALL_SPR_NUM 16
 #define MEDIUM_SPR_NUM 8
@@ -24,16 +25,12 @@
 #define COUNTDOWN_START_VAL 240
 #define COUNTDOWN_SECOND_START_VAL 20
 #define TEXT_LEN_MAX 13
+#define TUTORIAL_TEXT_LEN_MAX 19
 #define LETTERS_NUM 26
 #define LETTERS_MAX 90 // Was 92
 
-#define COLOR_BLACK 0x15
-#define COLOR_WHITE 0x01
-#define COLOR_RED 0x0A
-#define COLOR_GREEN 0x0D
-
-#define TEXT_COLOR_BLACK 0x0000
-#define TEXT_COLOR_WHITE 0xFFFF
+#define COLOR_BLACK 0x0000
+#define COLOR_WHITE 0xFFFF
 
 #define POST_BG_PALETTE_ADDR 0xFE
 #define TEXT_PALETTE_ADDR 0xFF
@@ -64,6 +61,14 @@ typedef struct post
     u16 profile_id;
     u16 pic_id;
 } post_t;
+
+typedef struct tutorial_post
+{
+    char first[TUTORIAL_TEXT_LEN_MAX];
+    char second[TUTORIAL_TEXT_LEN_MAX];
+    char third[TUTORIAL_TEXT_LEN_MAX];
+    u16 is_last_one;
+} tutorial_post_t;
 
 const post_t DATABASE[] = {
     {"DONNA CALDA", "A 2 KM", "DA TE", FALSE},
@@ -102,6 +107,14 @@ const post_t DATABASE[] = {
     {"SITO DI", "BARZELLETTE", "DIVERTENTI", TRUE},
 };
 
+const tutorial_post_t TUTORIAL_POSTS[] = {
+    {"SEI ROB, IL", "NUOVO MODERATORE", "DI TAMBLER", FALSE},
+    {"IL TUO LAVORO E'", "ELIMINARE I", "CONTENUTI ESPLICITI", FALSE},
+    {"PREMI R PER", "APPROVARE IL POST", "", FALSE},
+    {"PREMI L PER", "ELIMINARE IL POST", "", FALSE},
+    {"SE SBAGLI SARAI", "LICENZIATO!!!", "", FALSE},
+};
+
 void CopyOAM();
 void ResetSpritesPosition();
 void InitializeSprites();
@@ -137,17 +150,15 @@ void DrawCountdownBar();
 void SetTextColor(int color);
 void StartGameMusic();
 
-void EvaluateEndTutorial();
-
 void ProcessMenuScreen();
 void ProcessGameOverScreen();
 void ProcessCreditsScreen();
+void EvaluateEndTutorial();
 
 void DrawMenuScreen();
 void DrawTutorialPosts();
 void DrawGameOverScreen();
 void DrawCreditsScreen();
-
 
 void _Init();
 void _Update();
