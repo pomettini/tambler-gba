@@ -36,7 +36,8 @@
 			"general.h": "c",
 			"rng.h": "c",
 			"stdio.h": "c",
-			"gba_keys.h": "c"
+			"gba_keys.h": "c",
+			"random": "c"
 		},
 		"cSpell.enabled": false
 	}

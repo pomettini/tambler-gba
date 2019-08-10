@@ -125,6 +125,8 @@ void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y);
 void SetSprite(u16 oam_id, u16 sprite_id);
+void KeyPoll();
+u32 KeyReleased(u32 key);
 
 void LoadTutorialPosts();
 void GeneratePosts();
@@ -147,7 +149,7 @@ void DrawPost(s16 x_offset, s16 y_offset, post_t *post);
 void DrawPosts();
 void DrawPostBg(u16 id, s16 pos_x, s16 pos_y);
 void DrawCountdownBar();
-void SetTextColor(int color);
+void SetTextColor(u16 color);
 void StartGameMusic();
 
 void ProcessMenuScreen();

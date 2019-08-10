@@ -44,6 +44,8 @@ u16 palette = 0;
 u16 current_char = 0;
 u16 current_post_id = 0;
 
+u16 __key_curr = 0, __key_prev = 0;
+
 #define REG_BG0CNT *(volatile u16 *)0x4000008
 
 int main()
@@ -56,6 +58,7 @@ int main()
 	{
 		current_char = 0;
 
+		KeyPoll();
 		_Update();
 		_Draw();
 		WaitForVsync();
@@ -163,6 +166,17 @@ void SetSprite(u16 oam_id, u16 sprite_id)
 	sprites[oam_id].attribute2 = sprite_id;
 }
 
+void KeyPoll()
+{
+	__key_prev = __key_curr;
+	__key_curr = ~KEYS & 0x03FF;
+}
+
+u32 KeyReleased(u32 key)
+{
+	return (~__key_curr & __key_prev) & key;
+}
+
 void LoadTutorialPosts()
 {
 }
@@ -175,7 +189,6 @@ void GeneratePosts()
 
 void InsertTutorialPosts()
 {
-	
 }
 
 post_t GeneratePost()
@@ -246,7 +259,7 @@ void ProcessButtons()
 {
 	if (is_animating_swipe == FALSE && menu_lock == FALSE)
 	{
-		if (keyDown(KEY_LEFT))
+		if (KeyReleased(KEY_L))
 		{
 			swipe_direction = -1;
 			is_animating_swipe = TRUE;
@@ -254,7 +267,7 @@ void ProcessButtons()
 			menu_lock = TRUE;
 		}
 
-		if (keyDown(KEY_RIGHT))
+		if (KeyReleased(KEY_R))
 		{
 			swipe_direction = 1;
 			is_animating_swipe = TRUE;
@@ -271,9 +284,7 @@ void ProcessButtons()
 void ProcessFeedAnimation()
 {
 	if (is_animating_feed == TRUE)
-	{
 		posts_y_offset -= 10;
-	}
 
 	if (posts_y_offset <= -40)
 	{
@@ -287,9 +298,7 @@ void ProcessFeedAnimation()
 void ProcessSwipeAnimation()
 {
 	if (is_animating_swipe == TRUE)
-	{
 		posts_x_offset += 16 * swipe_direction;
-	}
 
 	if (posts_x_offset <= -SCREEN_WIDTH || posts_x_offset >= SCREEN_WIDTH)
 	{
@@ -314,9 +323,7 @@ void DecreaseCountdown()
 void PostAnimationEnded()
 {
 	if (game_state == TUTORIAL)
-	{
 		PopAndPushTutorial();
-	}
 
 	if (game_state == GAME)
 	{
@@ -450,9 +457,9 @@ void DrawCountdownBar()
 
 void ProcessMenuScreen()
 {
-	if (keyDown(KEY_R) && menu_lock == FALSE)
+	if (KeyReleased(KEY_R) && menu_lock == FALSE)
 		ChangeState(TUTORIAL);
-	else if (keyDown(KEY_L) && menu_lock == FALSE)
+	else if (KeyReleased(KEY_L) && menu_lock == FALSE)
 		ChangeState(CREDITS);
 	else
 		menu_lock = FALSE;
@@ -460,7 +467,7 @@ void ProcessMenuScreen()
 
 void ProcessGameOverScreen()
 {
-	if (keyDown(KEY_R) && menu_lock == FALSE)
+	if (KeyReleased(KEY_R) && menu_lock == FALSE)
 		ChangeState(GAME);
 	else
 		menu_lock = FALSE;
@@ -468,7 +475,7 @@ void ProcessGameOverScreen()
 
 void ProcessCreditsScreen()
 {
-	if (keyDown(KEY_R) && menu_lock == FALSE)
+	if (KeyReleased(KEY_R) && menu_lock == FALSE)
 		ChangeState(MENU);
 	else
 		menu_lock = FALSE;
@@ -487,10 +494,10 @@ void DrawMenuScreen()
 	// title screen
 	DrawText("TAMBLER", 0, 0);
 	// subtitle
-	DrawText("(PULISCI L'INTERNET)", 0, 8);
+	DrawText("(PULISCI L'INTERNET)", 0, 16);
 
-	DrawText("PREMI R PER INIZIARE", 0, 16);
-	DrawText("PREMI L PER I CREDITS", 0, 24);
+	DrawText("PREMI R PER INIZIARE", 0, 32);
+	DrawText("PREMI L PER I CREDITS", 0, 40);
 }
 
 void DrawTutorialPosts()
@@ -498,6 +505,7 @@ void DrawTutorialPosts()
 	SetTextColor(COLOR_WHITE);
 
 	DrawText("(TUTORIAL)", 0, 0);
+	DrawText("PREMI R PER AVANZARE", 0, 16);
 }
 
 void DrawGameOverScreen()
@@ -505,9 +513,14 @@ void DrawGameOverScreen()
 	SetTextColor(COLOR_WHITE);
 
 	DrawText("GAME OVER", 0, 0);
-	DrawText("SEI STATO CACCIATO!", 0, 8);
-	DrawText("IL TUO PUNTEGGIO E':", 0, 16);
-	DrawText("PREMI R PER RIPROVARE", 0, 24);
+	DrawText("SEI STATO CACCIATO!", 0, 16);
+	DrawText("IL TUO PUNTEGGIO E':", 0, 32);
+
+	char score_text[3];
+	sprintf(score_text, "%i", score);
+	DrawText(score_text, 168, 32);
+
+	DrawText("PREMI R PER RIPROVARE", 0, 48);
 }
 
 void DrawCreditsScreen()
@@ -515,14 +528,14 @@ void DrawCreditsScreen()
 	SetTextColor(COLOR_WHITE);
 
 	DrawText("TAMBLER THE GAME", 0, 0);
-	DrawText("A PIERETTINI PRODUCTION", 0, 8);
-	DrawText("ART: PIERA FALCONE", 0, 16);
-	DrawText("CODE: GIORGIO POMETTINI", 0, 24);
-	DrawText("MUSIC: TECLA ZORZI", 0, 32);
-	DrawText("PREMI R PER USCIRE", 0, 40);
+	DrawText("A PIERETTINI PRODUCTION", 0, 16);
+	DrawText("ART: P. FALCONE", 0, 32);
+	DrawText("CODE: G. POMETTINI", 0, 40);
+	// DrawText("MUSIC: T. ZORZI", 0, 32);
+	DrawText("PREMI R PER USCIRE", 0, 56);
 }
 
-void SetTextColor(int color)
+void SetTextColor(u16 color)
 {
 	OBJ_PaletteMem[TEXT_PALETTE_ADDR] = color;
 }
@@ -576,6 +589,9 @@ void _Update()
 		ProcessFeedAnimation();
 		ProcessSwipeAnimation();
 		EvaluateEndTutorial();
+
+		if (KeyReleased(KEY_R))
+			ChangeState(GAME);
 	}
 	else if (game_state == GAME)
 	{
@@ -610,7 +626,6 @@ void _Draw()
 		SetTextColor(COLOR_BLACK);
 		DrawPosts();
 		DrawCountdownBar();
-		DrawText("PREMI R PER AVANZARE", 0, 8);
 	}
 	else if (game_state == GAME_OVER)
 	{
