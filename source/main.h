@@ -26,8 +26,7 @@
 #define COUNTDOWN_SECOND_START_VAL 20
 #define TEXT_LEN_MAX 13
 #define TUTORIAL_TEXT_LEN_MAX 19
-#define LETTERS_NUM 26
-#define LETTERS_MAX 88 // Was 92
+#define LETTERS_MAX 84 // Was 92
 
 #define COLOR_BLACK 0x0000
 #define COLOR_WHITE 0xFFFF
@@ -110,10 +109,10 @@ const post_t DATABASE[] = {
 };
 
 const tutorial_post_t TUTORIAL_POSTS[] = {
-    {"SEI ROB, IL", "NUOVO MODERATORE", "DI TAMBLER", FALSE},
-    {"IL TUO LAVORO E'", "ELIMINARE I", "CONTENUTI ESPLICITI", FALSE},
-    {"PREMI R PER", "APPROVARE IL POST", "", FALSE},
-    {"PREMI L PER", "ELIMINARE IL POST", "", FALSE},
+    {"SEI ROB, IL", "NUOVO MOD.", "DI TAMBLER", FALSE},
+    {"DEVI ELIMINARE I", "POST ESPLICITI", "", FALSE},
+    {"PREMI R PER", "APPROVARE", "", FALSE},
+    {"PREMI L PER", "ELIMINARE", "", FALSE},
     {"SE SBAGLI SARAI", "LICENZIATO!!!", "", FALSE},
 };
 
@@ -160,6 +159,7 @@ void ProcessCreditsScreen();
 void EvaluateEndTutorial();
 
 void DrawMenuScreen();
+void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post);
 void DrawTutorialPosts();
 void DrawGameOverScreen();
 void DrawCreditsScreen();

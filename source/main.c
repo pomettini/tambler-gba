@@ -174,10 +174,6 @@ u32 KeyReleased(u32 key)
 	return (~__key_curr & __key_prev) & key;
 }
 
-void LoadTutorialPosts()
-{
-}
-
 void GeneratePosts()
 {
 	for (u16 i = 0; i < POST_NUM; i++)
@@ -186,6 +182,8 @@ void GeneratePosts()
 
 void InsertTutorialPosts()
 {
+	for (u16 i = 0; i < TUTORIAL_POST_NUM; i++)
+		tutorial_posts[i] = TUTORIAL_POSTS[i];
 }
 
 post_t GeneratePost()
@@ -368,6 +366,7 @@ void ChangeState(u16 new_state)
 		break;
 	case GAME:
 		SwapToGameBg();
+		SetTextColor(COLOR_BLACK);
 		break;
 	case GAME_OVER:
 		SwapToDarkBlueBg();
@@ -509,6 +508,8 @@ void ProcessCreditsScreen()
 
 void EvaluateEndTutorial()
 {
+	if (tutorial_posts[0].is_last_one == TRUE)
+		ChangeState(GAME);
 }
 
 void DrawMenuScreen()
@@ -524,11 +525,65 @@ void DrawMenuScreen()
 	DrawText("PREMI L PER I CREDITS", CalculateCenterX(21), 120);
 }
 
+void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post)
+{
+	if (post->is_last_one == FALSE)
+	{
+		// Post bg
+		DrawPostBg(current_post_id, x_offset, y_offset);
+
+		sprites[112 + current_post_id].attribute0 = COLOR_256 | WIDE | 8 + y_offset;
+		sprites[112 + current_post_id].attribute1 = SIZE_64 | 32 + x_offset;
+		sprites[112 + current_post_id].attribute2 = 768;
+
+		// Profile pic
+		SetSprite(16 + current_post_id, 84);
+		MoveMediumSprite(16 + current_post_id, 8 + x_offset, 8 + y_offset);
+
+		if (current_post_id < 6)
+		{
+			// Text
+			DrawText(
+				post->first,
+				36 + x_offset,
+				16 + y_offset + text_y_offset);
+			DrawText(
+				post->second,
+				36 + x_offset,
+				24 + y_offset + text_y_offset);
+			DrawText(
+				post->third,
+				36 + x_offset,
+				32 + y_offset + text_y_offset);
+		}
+	}
+	else
+	{
+		sprites[112 + current_post_id].attribute0 = COLOR_256 | WIDE | 160;
+		sprites[112 + current_post_id].attribute1 = SIZE_64 | 240;
+
+		DrawPostBg(current_post_id, 240, 160);
+		MoveMediumSprite(16 + current_post_id, 240, 160);
+	}
+
+	current_post_id += 2;
+}
+
 void DrawTutorialPosts()
 {
-	SetTextColor(COLOR_WHITE);
+	SetTextColor(COLOR_BLACK);
 
-	DrawText("PREMI R PER AVANZARE", CalculateCenterX(20), 8);
+	// DrawText("PREMI R", CalculateCenterX(9), 8);
+
+	s16 y_offset = posts_y_offset + 16;
+	s16 x_offset = posts_x_offset;
+
+	current_post_id = 0;
+
+	DrawTutorialPost(20 + x_offset, 0 + y_offset, &tutorial_posts[0]);
+	DrawTutorialPost(20, 40 + y_offset, &tutorial_posts[1]);
+	DrawTutorialPost(20, 80 + y_offset, &tutorial_posts[2]);
+	DrawTutorialPost(20, 120 + y_offset, &tutorial_posts[3]);
 }
 
 void DrawGameOverScreen()
@@ -630,8 +685,9 @@ void _Init()
 	SwapToTitleBg();
 
 	InitializeSprites();
-	ResetSpritesPosition();
 	GeneratePosts();
+	InsertTutorialPosts();
+	ResetSpritesPosition();
 }
 
 void _Update()
@@ -646,9 +702,6 @@ void _Update()
 		ProcessFeedAnimation();
 		ProcessSwipeAnimation();
 		EvaluateEndTutorial();
-
-		if (KeyReleased(KEY_R))
-			ChangeState(GAME);
 	}
 	else if (game_state == GAME)
 	{
@@ -680,7 +733,6 @@ void _Draw()
 	}
 	else if (game_state == GAME)
 	{
-		SetTextColor(COLOR_BLACK);
 		DrawPosts();
 		DrawCountdownBar();
 	}
