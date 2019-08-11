@@ -36,6 +36,9 @@
 #define POST_BG_PALETTE_ADDR 0xFE
 #define TEXT_PALETTE_ADDR 0xFF
 
+#define SPRITE_START_ADDR 512
+#define WHITE_RECTANGLE_ADDR 768
+
 enum states
 {
     MENU = 0,

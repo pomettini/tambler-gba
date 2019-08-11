@@ -11,8 +11,9 @@
 
 // TODO: Remove all magic numbers
 // TODO: Add sprite flipping
-// TODO: Add music
+// TODO: Add sfx and music
 // TODO: Fix magenta screen between swaps
+// TODO: Add sine wave letters
 
 // States
 u16 game_state = MENU;
@@ -35,8 +36,8 @@ s16 posts_y_offset = 0;
 s16 posts_x_offset = 0;
 
 // Const globals
-const u16 countdown_speed = 3;
-const u16 text_y_offset = -4;
+const u16 COUNTDOWN_SPEED = 3;
+const u16 TEXT_Y_OFFSET = -4;
 
 // GBA stuff
 OAMEntry sprites[SPRITE_NUM];
@@ -101,14 +102,14 @@ void InitializeSprites()
 void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y)
 {
 	if (pos_x < 0)
-		pos_x = 256;
+		pos_x = SCREEN_WIDTH;
 
 	if (current_char >= LETTERS_MAX)
 		return;
 
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute1 = SIZE_8 | pos_x;
-	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = 512 + 256 + 64 + ((int)char_ * 2);
+	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = SPRITE_START_ADDR + 320 + ((int)char_ * 2);
 
 	current_char++;
 }
@@ -136,7 +137,7 @@ void CleanCharacterSprites()
 void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y)
 {
 	if (pos_x < 0)
-		pos_x = 256;
+		pos_x = SCREEN_WIDTH;
 
 	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[id].attribute1 = SIZE_8 | pos_x;
@@ -145,7 +146,7 @@ void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y)
 void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y)
 {
 	if (pos_x < 0)
-		pos_x = 256;
+		pos_x = SCREEN_WIDTH;
 
 	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[id].attribute1 = SIZE_16 | pos_x;
@@ -154,7 +155,7 @@ void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y)
 void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y)
 {
 	if (pos_x < 0)
-		pos_x = 256;
+		pos_x = SCREEN_WIDTH;
 
 	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[id].attribute1 = SIZE_32 | pos_x;
@@ -162,7 +163,7 @@ void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y)
 
 void SetSprite(u16 oam_id, u16 sprite_id)
 {
-	sprites[oam_id].attribute2 = 512 + sprite_id;
+	sprites[oam_id].attribute2 = SPRITE_START_ADDR + sprite_id;
 }
 
 void KeyPoll()
@@ -229,11 +230,9 @@ void PopAndPushTutorial()
 {
 	tutorial_post_t last_post = {"", "", "", TRUE};
 
-	// TODO: Refactor this
-	tutorial_posts[0] = tutorial_posts[1];
-	tutorial_posts[1] = tutorial_posts[2];
-	tutorial_posts[2] = tutorial_posts[3];
-	tutorial_posts[3] = tutorial_posts[4];
+	for (u16 i = 0; i < TUTORIAL_POST_NUM - 1; i++)
+		tutorial_posts[i] = tutorial_posts[i + 1];
+
 	tutorial_posts[4] = last_post;
 }
 
@@ -314,7 +313,7 @@ void DecreaseCountdown()
 		countdown_ = COUNTDOWN_SECOND_START_VAL;
 
 	if (is_animating_swipe == FALSE)
-		countdown -= countdown_speed;
+		countdown -= COUNTDOWN_SPEED;
 }
 
 void PostAnimationEnded()
@@ -413,15 +412,15 @@ void DrawPost(s16 x_offset, s16 y_offset, post_t *post)
 	DrawText(
 		post->first,
 		72 + x_offset,
-		16 + y_offset + text_y_offset);
+		16 + y_offset + TEXT_Y_OFFSET);
 	DrawText(
 		post->second,
 		72 + x_offset,
-		24 + y_offset + text_y_offset);
+		24 + y_offset + TEXT_Y_OFFSET);
 	DrawText(
 		post->third,
 		72 + x_offset,
-		32 + y_offset + text_y_offset);
+		32 + y_offset + TEXT_Y_OFFSET);
 
 	current_post_id += 2;
 }
@@ -445,41 +444,25 @@ void DrawPosts()
 void DrawPostBg(u16 id, s16 pos_x, s16 pos_y)
 {
 	if (pos_x < -64)
-		pos_x = 256;
+		pos_x = SCREEN_WIDTH;
 
 	sprites[120 + id].attribute0 = COLOR_256 | WIDE | 8 + pos_y;
 	sprites[120 + id].attribute1 = SIZE_64 | 64 + pos_x;
-	sprites[120 + id].attribute2 = 768;
+	sprites[120 + id].attribute2 = WHITE_RECTANGLE_ADDR;
 
 	sprites[121 + id].attribute0 = COLOR_256 | WIDE | 8 + pos_y;
 	sprites[121 + id].attribute1 = SIZE_64 | 128 + pos_x;
-	sprites[121 + id].attribute2 = 768;
+	sprites[121 + id].attribute2 = WHITE_RECTANGLE_ADDR;
 }
 
 void DrawCountdownBar()
 {
-	// TODO: Refactor this
-
-	sprites[116].attribute0 = COLOR_256 | WIDE | 143;
-	sprites[116].attribute1 = SIZE_64 | countdown - 60 - 16;
-	sprites[116].attribute2 = 768;
-
-	sprites[117].attribute0 = COLOR_256 | WIDE | 143;
-	sprites[117].attribute1 = SIZE_64 | countdown - 120 - 16;
-	sprites[117].attribute2 = 768;
-
-	sprites[118].attribute0 = COLOR_256 | WIDE | 143;
-	sprites[118].attribute1 = SIZE_64 | countdown - 180 - 16;
-	sprites[118].attribute2 = 768;
-
-	sprites[119].attribute0 = COLOR_256 | WIDE | 143;
-	sprites[119].attribute1 = SIZE_64 | countdown - 240 - 16;
-	sprites[119].attribute2 = 768;
-
-	// char text[12];
-	// sprintf(text, "%i", score);
-
-	// DrawText(text, 0, 0);
+	for (u16 i = 0; i < 4; i++)
+	{
+		sprites[116 + i].attribute0 = COLOR_256 | WIDE | 143;
+		sprites[116 + i].attribute1 = SIZE_64 | countdown - (60 * (i + 1)) - 16;
+		sprites[116 + i].attribute2 = WHITE_RECTANGLE_ADDR;
+	}
 }
 
 void ProcessMenuScreen()
@@ -536,7 +519,7 @@ void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post)
 
 		sprites[112 + current_post_id].attribute0 = COLOR_256 | WIDE | 8 + y_offset;
 		sprites[112 + current_post_id].attribute1 = SIZE_64 | 32 + x_offset;
-		sprites[112 + current_post_id].attribute2 = 768;
+		sprites[112 + current_post_id].attribute2 = WHITE_RECTANGLE_ADDR;
 
 		// Profile pic
 		SetSprite(16 + current_post_id, 84);
@@ -548,24 +531,24 @@ void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post)
 			DrawText(
 				post->first,
 				36 + x_offset,
-				16 + y_offset + text_y_offset);
+				16 + y_offset + TEXT_Y_OFFSET);
 			DrawText(
 				post->second,
 				36 + x_offset,
-				24 + y_offset + text_y_offset);
+				24 + y_offset + TEXT_Y_OFFSET);
 			DrawText(
 				post->third,
 				36 + x_offset,
-				32 + y_offset + text_y_offset);
+				32 + y_offset + TEXT_Y_OFFSET);
 		}
 	}
 	else
 	{
-		sprites[112 + current_post_id].attribute0 = COLOR_256 | WIDE | 160;
-		sprites[112 + current_post_id].attribute1 = SIZE_64 | 240;
+		sprites[112 + current_post_id].attribute0 = COLOR_256 | WIDE | SCREEN_HEIGHT;
+		sprites[112 + current_post_id].attribute1 = SIZE_64 | SCREEN_WIDTH;
 
-		DrawPostBg(current_post_id, 240, 160);
-		MoveMediumSprite(16 + current_post_id, 240, 160);
+		DrawPostBg(current_post_id, SCREEN_WIDTH, SCREEN_HEIGHT);
+		MoveMediumSprite(16 + current_post_id, SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
 
 	current_post_id += 2;
@@ -625,9 +608,9 @@ void SwapToTitleBg()
 	for (u16 i = 0; i < 256; i++)
 		BG_PaletteMem[i] = title_bg_palette[i];
 
-	memset(FrontBuffer, 0x01, 240 * 160);
+	memset(FrontBuffer, 0x01, SCREEN_WIDTH * SCREEN_HEIGHT);
 	// Put at height 38
-	memcpy(FrontBuffer + (19 * 240), title_bg_data, sizeof(title_bg_data));
+	memcpy(FrontBuffer + (19 * SCREEN_WIDTH), title_bg_data, sizeof(title_bg_data));
 }
 
 void SwapToGameBg()
@@ -643,7 +626,7 @@ void SwapToDarkBlueBg()
 	for (u16 i = 0; i < 256; i++)
 		BG_PaletteMem[i] = COLOR_DARK_BLUE;
 
-	memset(FrontBuffer, 0x0000, 240 * 160);
+	memset(FrontBuffer, 0x0000, SCREEN_WIDTH * SCREEN_HEIGHT);
 }
 
 void SwapToLightBlueBg()
@@ -651,7 +634,7 @@ void SwapToLightBlueBg()
 	for (u16 i = 0; i < 256; i++)
 		BG_PaletteMem[i] = COLOR_LIGHT_BLUE;
 
-	memset(FrontBuffer, 0x0000, 240 * 160);
+	memset(FrontBuffer, 0x0000, SCREEN_WIDTH * SCREEN_HEIGHT);
 }
 
 inline u16 CalculateCenterX(u16 char_num)
