@@ -9,7 +9,7 @@
 
 #define OAM_Mem ((u16 *)0x7000000)
 #define OBJ_PaletteMem ((u16 *)0x5000200)
-#define OAM_Data ((u16 *)0x6010000)
+#define OAM_Data ((u16 *)0x6014000)
 
 #define FrontBuffer ((u16 *)0x6000000)
 #define BG_PaletteMem ((u16 *)0x5000000)

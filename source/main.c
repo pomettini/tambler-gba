@@ -4,7 +4,8 @@
 #include "gba.h"
 #include "sprites.h"
 #include "font.h"
-#include "game_background.h"
+#include "background.h"
+#include "game_bg.h"
 #include "main.h"
 
 // TODO: Remove all magic numbers
@@ -46,12 +47,8 @@ u16 current_post_id = 0;
 
 u16 __key_curr = 0, __key_prev = 0;
 
-#define REG_BG0CNT *(volatile u16 *)0x4000008
-
 int main()
 {
-	SetMode(MODE_0 | BG0_ENABLE | OBJ_ENABLE | OBJ_MAP_2D);
-
 	_Init();
 
 	for (ever)
@@ -73,10 +70,9 @@ void CopyOAM()
 	u16 loop;
 	u16 *temp;
 	temp = (u16 *)sprites;
+
 	for (loop = 0; loop < SPRITE_NUM * 4; loop++)
-	{
 		OAM_Mem[loop] = temp[loop];
-	}
 }
 
 void ResetSpritesPosition()
@@ -109,7 +105,7 @@ void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y)
 
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | SQUARE | pos_y;
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute1 = SIZE_8 | pos_x;
-	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = 512 + ((int)char_ * 2);
+	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = 512 + 256 + 64 + ((int)char_ * 2);
 
 	current_char++;
 }
@@ -163,7 +159,7 @@ void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y)
 
 void SetSprite(u16 oam_id, u16 sprite_id)
 {
-	sprites[oam_id].attribute2 = sprite_id;
+	sprites[oam_id].attribute2 = 512 + sprite_id;
 }
 
 void KeyPoll()
@@ -430,24 +426,32 @@ void DrawPostBg(u16 id, s16 pos_x, s16 pos_y)
 	if (pos_x < -64)
 		pos_x = 256;
 
-	sprites[120 + id].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 8 + pos_y;
-	sprites[120 + id].attribute1 = SIZE_32 | ROTDATA(0) | 64 + pos_x;
-	sprites[120 + id].attribute2 = 256;
+	sprites[120 + id].attribute0 = COLOR_256 | WIDE | 8 + pos_y;
+	sprites[120 + id].attribute1 = SIZE_64 | 64 + pos_x;
+	sprites[120 + id].attribute2 = 768;
 
-	sprites[121 + id].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 8 + pos_y;
-	sprites[121 + id].attribute1 = SIZE_32 | ROTDATA(0) | 128 + pos_x;
-	sprites[121 + id].attribute2 = 256;
+	sprites[121 + id].attribute0 = COLOR_256 | WIDE | 8 + pos_y;
+	sprites[121 + id].attribute1 = SIZE_64 | 128 + pos_x;
+	sprites[121 + id].attribute2 = 768;
 }
 
 void DrawCountdownBar()
 {
-	sprites[118].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 142;
-	sprites[118].attribute1 = SIZE_64 | ROTDATA(0) | countdown - 120 - 16;
-	sprites[118].attribute2 = 256;
+	sprites[116].attribute0 = COLOR_256 | WIDE | 143;
+	sprites[116].attribute1 = SIZE_64 | countdown - 60 - 16;
+	sprites[116].attribute2 = 768;
 
-	sprites[119].attribute0 = COLOR_256 | WIDE | ROTATION_FLAG | SIZE_DOUBLE | 142;
-	sprites[119].attribute1 = SIZE_64 | ROTDATA(0) | countdown - 240 - 16;
-	sprites[119].attribute2 = 256;
+	sprites[117].attribute0 = COLOR_256 | WIDE | 143;
+	sprites[117].attribute1 = SIZE_64 | countdown - 120 - 16;
+	sprites[117].attribute2 = 768;
+
+	sprites[118].attribute0 = COLOR_256 | WIDE | 143;
+	sprites[118].attribute1 = SIZE_64 | countdown - 180 - 16;
+	sprites[118].attribute2 = 768;
+
+	sprites[119].attribute0 = COLOR_256 | WIDE | 143;
+	sprites[119].attribute1 = SIZE_64 | countdown - 240 - 16;
+	sprites[119].attribute2 = 768;
 
 	// char text[12];
 	// sprintf(text, "%i", score);
@@ -546,29 +550,28 @@ void StartGameMusic()
 
 void _Init()
 {
+	SetMode(MODE_4 | BG2_ENABLE | OBJ_ENABLE | OBJ_MAP_2D);
+
 	// TODO: Find a way to generate a random seed
 	srand(10);
-
-	REG_BG0CNT = 0x1F83;
 
 	// Copy palette data
 	for (u16 i = 0; i < 256; i++)
 	{
 		OBJ_PaletteMem[i] = tileset_palette[i];
-		BG_PaletteMem[i] = game_background_palette[i];
+		BG_PaletteMem[i] = game_bg_palette[i];
 	}
 
 	// Copy sprite and bg data
-	memcpy(FrontBuffer, game_background_data, sizeof(game_background_data));
 	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
+	memcpy(FrontBuffer, game_bg_data, sizeof(game_bg_data));
+
+	// Copy font data (font palette is 0xFF)
+	memcpy(OAM_Data + 4096 + 1024, font_data, sizeof(font_data));
 
 	// Put last part of spritesheet to white color
 	OBJ_PaletteMem[POST_BG_PALETTE_ADDR] = COLOR_WHITE;
 	memset(OAM_Data + 4096, POST_BG_PALETTE_ADDR, 4096);
-
-	// Was 4096
-	// Copy font data (font palette is 0xFF)
-	memcpy(OAM_Data + 8192, font_data, sizeof(font_data));
 
 	InitializeSprites();
 

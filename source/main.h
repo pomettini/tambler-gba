@@ -27,7 +27,7 @@
 #define TEXT_LEN_MAX 13
 #define TUTORIAL_TEXT_LEN_MAX 19
 #define LETTERS_NUM 26
-#define LETTERS_MAX 90 // Was 92
+#define LETTERS_MAX 88 // Was 92
 
 #define COLOR_BLACK 0x0000
 #define COLOR_WHITE 0xFFFF

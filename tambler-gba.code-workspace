@@ -37,7 +37,10 @@
 			"rng.h": "c",
 			"stdio.h": "c",
 			"gba_keys.h": "c",
-			"random": "c"
+			"random": "c",
+			"title.h": "c",
+			"background.h": "c",
+			"__locale": "c"
 		},
 		"cSpell.enabled": false
 	}
