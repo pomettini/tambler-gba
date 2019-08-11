@@ -11,6 +11,8 @@
 
 // TODO: Remove all magic numbers
 // TODO: Add sprite flipping
+// TODO: Add music
+// TODO: Fix magenta screen between swaps
 
 // States
 u16 game_state = MENU;
