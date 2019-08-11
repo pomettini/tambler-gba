@@ -31,6 +31,8 @@
 
 #define COLOR_BLACK 0x0000
 #define COLOR_WHITE 0xFFFF
+#define COLOR_LIGHT_BLUE 0x7EA5
+#define COLOR_DARK_BLUE 0x28A3
 
 #define POST_BG_PALETTE_ADDR 0xFE
 #define TEXT_PALETTE_ADDR 0xFF
@@ -161,6 +163,13 @@ void DrawMenuScreen();
 void DrawTutorialPosts();
 void DrawGameOverScreen();
 void DrawCreditsScreen();
+
+void SwapToTitleBg();
+void SwapToGameBg();
+void SwapToDarkBlueBg();
+void SwapToLightBlueBg();
+
+inline u16 CalculateCenterX(u16 char_num);
 
 void _Init();
 void _Update();

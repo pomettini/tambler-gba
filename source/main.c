@@ -6,6 +6,7 @@
 #include "font.h"
 #include "background.h"
 #include "game_bg.h"
+#include "title_bg.h"
 #include "main.h"
 
 // TODO: Remove all magic numbers
@@ -357,6 +358,25 @@ void ChangeState(u16 new_state)
 	menu_lock = TRUE;
 	game_state = new_state;
 
+	switch (new_state)
+	{
+	case MENU:
+		SwapToTitleBg();
+		break;
+	case TUTORIAL:
+		SwapToDarkBlueBg();
+		break;
+	case GAME:
+		SwapToGameBg();
+		break;
+	case GAME_OVER:
+		SwapToDarkBlueBg();
+		break;
+	case CREDITS:
+		SwapToLightBlueBg();
+		break;
+	}
+
 	if (new_state == GAME)
 	{
 		ResetGameState();
@@ -437,6 +457,8 @@ void DrawPostBg(u16 id, s16 pos_x, s16 pos_y)
 
 void DrawCountdownBar()
 {
+	// TODO: Refactor this
+
 	sprites[116].attribute0 = COLOR_256 | WIDE | 143;
 	sprites[116].attribute1 = SIZE_64 | countdown - 60 - 16;
 	sprites[116].attribute2 = 768;
@@ -495,53 +517,89 @@ void DrawMenuScreen()
 
 	// bg
 	// falling hearts draw
-	// title screen
-	DrawText("TAMBLER", 0, 0);
 	// subtitle
-	DrawText("(PULISCI L'INTERNET)", 0, 16);
+	DrawText("(PULISCI L'INTERNET)", CalculateCenterX(20), 80);
 
-	DrawText("PREMI R PER INIZIARE", 0, 32);
-	DrawText("PREMI L PER I CREDITS", 0, 40);
+	DrawText("PREMI R PER INIZIARE", CalculateCenterX(20), 104);
+	DrawText("PREMI L PER I CREDITS", CalculateCenterX(21), 120);
 }
 
 void DrawTutorialPosts()
 {
 	SetTextColor(COLOR_WHITE);
 
-	DrawText("(TUTORIAL)", 0, 0);
-	DrawText("PREMI R PER AVANZARE", 0, 16);
+	DrawText("PREMI R PER AVANZARE", CalculateCenterX(20), 8);
 }
 
 void DrawGameOverScreen()
 {
 	SetTextColor(COLOR_WHITE);
 
-	DrawText("GAME OVER", 0, 0);
-	DrawText("SEI STATO CACCIATO!", 0, 16);
-	DrawText("IL TUO PUNTEGGIO E':", 0, 32);
+	char score_text[] = "IL TUO PUNTEGGIO E':    ";
+	sprintf(&score_text[21], "%i", score);
 
-	char score_text[3];
-	sprintf(score_text, "%i", score);
-	DrawText(score_text, 168, 32);
-
-	DrawText("PREMI R PER RIPROVARE", 0, 48);
+	DrawText("GAME OVER", CalculateCenterX(9), 40);
+	DrawText("SEI STATO CACCIATO!", CalculateCenterX(19), 64);
+	DrawText(score_text, CalculateCenterX(23), 88);
+	DrawText("PREMI R PER RIPROVARE", CalculateCenterX(21), 112);
 }
 
 void DrawCreditsScreen()
 {
 	SetTextColor(COLOR_WHITE);
 
-	DrawText("TAMBLER THE GAME", 0, 0);
-	DrawText("A PIERETTINI PRODUCTION", 0, 16);
-	DrawText("ART: P. FALCONE", 0, 32);
-	DrawText("CODE: G. POMETTINI", 0, 40);
-	// DrawText("MUSIC: T. ZORZI", 0, 32);
-	DrawText("PREMI R PER USCIRE", 0, 56);
+	DrawText("TAMBLER", CalculateCenterX(7), 40);
+	DrawText("A PIERETTINI GAME", CalculateCenterX(17), 56);
+
+	DrawText("ART: PIERA FALCONE", CalculateCenterX(18), 80);
+	DrawText("CODE: GIORGIO POMETTINI", CalculateCenterX(23), 96);
+	// DrawText("MUSIC: TECLA ZORZI", 0, 32); <- Sorry Tecla :(
+
+	DrawText("PREMI R PER USCIRE", CalculateCenterX(18), 120);
 }
 
 void SetTextColor(u16 color)
 {
 	OBJ_PaletteMem[TEXT_PALETTE_ADDR] = color;
+}
+
+void SwapToTitleBg()
+{
+	for (u16 i = 0; i < 256; i++)
+		BG_PaletteMem[i] = title_bg_palette[i];
+
+	memset(FrontBuffer, 0x01, 240 * 160);
+	// Put at height 38
+	memcpy(FrontBuffer + (19 * 240), title_bg_data, sizeof(title_bg_data));
+}
+
+void SwapToGameBg()
+{
+	for (u16 i = 0; i < 256; i++)
+		BG_PaletteMem[i] = game_bg_palette[i];
+
+	memcpy(FrontBuffer, game_bg_data, sizeof(game_bg_data));
+}
+
+void SwapToDarkBlueBg()
+{
+	for (u16 i = 0; i < 256; i++)
+		BG_PaletteMem[i] = COLOR_DARK_BLUE;
+
+	memset(FrontBuffer, 0x0000, 240 * 160);
+}
+
+void SwapToLightBlueBg()
+{
+	for (u16 i = 0; i < 256; i++)
+		BG_PaletteMem[i] = COLOR_LIGHT_BLUE;
+
+	memset(FrontBuffer, 0x0000, 240 * 160);
+}
+
+inline u16 CalculateCenterX(u16 char_num)
+{
+	return (SCREEN_WIDTH / 2) - ((char_num * 8) / 2);
 }
 
 void StartGameMusic()
@@ -557,14 +615,10 @@ void _Init()
 
 	// Copy palette data
 	for (u16 i = 0; i < 256; i++)
-	{
 		OBJ_PaletteMem[i] = tileset_palette[i];
-		BG_PaletteMem[i] = game_bg_palette[i];
-	}
 
-	// Copy sprite and bg data
+	// Copy sprite data
 	memcpy(OAM_Data, tileset_data, sizeof(tileset_data));
-	memcpy(FrontBuffer, game_bg_data, sizeof(game_bg_data));
 
 	// Copy font data (font palette is 0xFF)
 	memcpy(OAM_Data + 4096 + 1024, font_data, sizeof(font_data));
@@ -573,10 +627,10 @@ void _Init()
 	OBJ_PaletteMem[POST_BG_PALETTE_ADDR] = COLOR_WHITE;
 	memset(OAM_Data + 4096, POST_BG_PALETTE_ADDR, 4096);
 
+	SwapToTitleBg();
+
 	InitializeSprites();
-
 	ResetSpritesPosition();
-
 	GeneratePosts();
 }
 
