@@ -10,9 +10,14 @@
 #include "africa.h"
 #include "main.h"
 
-// TODO: Add sfx and music (almost)
+// TODO: Add sfx
+// TODO: Add music (almost!)
+// TODO: Loop music
 // TODO: Add sprite flipping
 // TODO: Fix magenta screen between swaps
+// TODO: Add falling stuff on menu screen
+// TODO: Add small sprites on post images
+// TODO: Add best score
 
 // States
 u16 game_state = MENU;
@@ -489,12 +494,12 @@ void DrawCountdownBar()
 
 void ProcessMenuScreen()
 {
-	if (KeyReleased(KEY_R) && menu_lock == FALSE)
+	if (KeyReleased(KEY_R) && menu_lock == FALSE && mosaic_effect == FALSE)
 	{
 		StartMosaicEffect();
 		next_state = TUTORIAL;
 	}
-	else if (KeyReleased(KEY_L) && menu_lock == FALSE)
+	else if (KeyReleased(KEY_L) && menu_lock == FALSE && mosaic_effect == FALSE)
 	{
 		StartMosaicEffect();
 		next_state = CREDITS;
@@ -516,7 +521,7 @@ void ProcessGameOverScreen()
 
 void ProcessCreditsScreen()
 {
-	if (KeyReleased(KEY_R) && menu_lock == FALSE)
+	if (KeyReleased(KEY_R) && menu_lock == FALSE && mosaic_effect == FALSE)
 		StartMosaicEffect();
 	else
 		menu_lock = FALSE;
@@ -527,7 +532,10 @@ void ProcessCreditsScreen()
 
 void EvaluateEndTutorial()
 {
-	if (tutorial_posts[0].is_last_one == TRUE)
+	if (tutorial_posts[0].is_last_one == TRUE && mosaic_effect == FALSE)
+		StartMosaicEffect();
+
+	if (MOSAIC_EFFECT_ENDED)
 		ChangeState(GAME);
 }
 
