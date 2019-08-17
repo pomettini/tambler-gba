@@ -40,7 +40,15 @@
 			"random": "c",
 			"title.h": "c",
 			"background.h": "c",
-			"__locale": "c"
+			"__locale": "c",
+			"ONERING.C": "cpp",
+			"screenmode.h": "c",
+			"time.h": "c",
+			"sound.h": "c",
+			"onering.h": "c",
+			"dma.h": "c",
+			"dispcnt.h": "c",
+			"malloc.h": "c"
 		},
 		"cSpell.enabled": false
 	}

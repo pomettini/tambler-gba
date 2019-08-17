@@ -7,9 +7,9 @@
 #include "background.h"
 #include "game_bg.h"
 #include "title_bg.h"
+#include "africa.h"
 #include "main.h"
 
-// TODO: Remove all magic numbers
 // TODO: Add sprite flipping
 // TODO: Add sfx and music
 // TODO: Fix magenta screen between swaps
@@ -51,6 +51,14 @@ u16 current_post_id = 0;
 
 u16 __key_curr = 0, __key_prev = 0;
 
+u16 mosaic_effect = FALSE;
+u16 mosaic_amount = 0;
+s16 mosaic_delta = 0;
+
+u16 next_state = 0;
+
+#define MOSAIC_EFFECT_ENDED mosaic_amount == MOSAIC_MAX
+
 int main()
 {
 	_Init();
@@ -59,9 +67,15 @@ int main()
 	{
 		current_char = 0;
 
+		PlayMusic();
 		KeyPoll();
 		_Update();
 		_Draw();
+
+		// if (KeyReleased(KEY_A))
+		// 	StartMosaicEffect();
+
+		ProcessMosaicEffect();
 		WaitForVsync();
 		CopyOAM();
 	}
@@ -81,7 +95,7 @@ void CopyOAM()
 
 void ResetSpritesPosition()
 {
-	for (int x = 0; x < SPRITE_NUM; x++)
+	for (u16 x = 0; x < SPRITE_NUM; x++)
 	{
 		sprites[x].attribute0 = SCREEN_HEIGHT;
 		sprites[x].attribute1 = SCREEN_WIDTH;
@@ -93,7 +107,7 @@ void InitializeSprites()
 	// Init small sprites
 	for (u16 i = 0; i < 16; i++)
 	{
-		sprites[i].attribute0 = COLOR_256 | SQUARE | i * 8;
+		sprites[i].attribute0 = COLOR_256 | MOSAIC | SQUARE | i * 8;
 		sprites[i].attribute1 = SIZE_8 | i * 8;
 		sprites[i].attribute2 = 2 + (i * 2);
 	}
@@ -107,9 +121,9 @@ void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y)
 	if (current_char >= LETTERS_MAX)
 		return;
 
-	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | SQUARE | pos_y;
+	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | MOSAIC | SQUARE | pos_y;
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute1 = SIZE_8 | pos_x;
-	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = SPRITE_START_ADDR + 320 + ((int)char_ * 2);
+	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = SPRITE_START_ADDR + 320 + ((u16)char_ * 2);
 
 	current_char++;
 }
@@ -139,7 +153,7 @@ void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y)
 	if (pos_x < 0)
 		pos_x = SCREEN_WIDTH;
 
-	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
+	sprites[id].attribute0 = COLOR_256 | MOSAIC | SQUARE | pos_y;
 	sprites[id].attribute1 = SIZE_8 | pos_x;
 }
 
@@ -148,7 +162,7 @@ void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y)
 	if (pos_x < 0)
 		pos_x = SCREEN_WIDTH;
 
-	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
+	sprites[id].attribute0 = COLOR_256 | MOSAIC | SQUARE | pos_y;
 	sprites[id].attribute1 = SIZE_16 | pos_x;
 }
 
@@ -157,7 +171,7 @@ void MoveBigSprite(u16 id, s16 pos_x, s16 pos_y)
 	if (pos_x < 0)
 		pos_x = SCREEN_WIDTH;
 
-	sprites[id].attribute0 = COLOR_256 | SQUARE | pos_y;
+	sprites[id].attribute0 = COLOR_256 | MOSAIC | SQUARE | pos_y;
 	sprites[id].attribute1 = SIZE_32 | pos_x;
 }
 
@@ -380,7 +394,7 @@ void ChangeState(u16 new_state)
 	if (new_state == GAME)
 	{
 		ResetGameState();
-		StartGameMusic();
+		// Start game music
 	}
 
 	ResetSpritesPosition();
@@ -446,11 +460,11 @@ void DrawPostBg(u16 id, s16 pos_x, s16 pos_y)
 	if (pos_x < -64)
 		pos_x = SCREEN_WIDTH;
 
-	sprites[120 + id].attribute0 = COLOR_256 | WIDE | 8 + pos_y;
+	sprites[120 + id].attribute0 = COLOR_256 | MOSAIC | WIDE | 8 + pos_y;
 	sprites[120 + id].attribute1 = SIZE_64 | 64 + pos_x;
 	sprites[120 + id].attribute2 = WHITE_RECTANGLE_ADDR;
 
-	sprites[121 + id].attribute0 = COLOR_256 | WIDE | 8 + pos_y;
+	sprites[121 + id].attribute0 = COLOR_256 | MOSAIC | WIDE | 8 + pos_y;
 	sprites[121 + id].attribute1 = SIZE_64 | 128 + pos_x;
 	sprites[121 + id].attribute2 = WHITE_RECTANGLE_ADDR;
 }
@@ -459,7 +473,7 @@ void DrawCountdownBar()
 {
 	for (u16 i = 0; i < 4; i++)
 	{
-		sprites[116 + i].attribute0 = COLOR_256 | WIDE | 143;
+		sprites[116 + i].attribute0 = COLOR_256 | MOSAIC | WIDE | 143;
 		sprites[116 + i].attribute1 = SIZE_64 | countdown - (60 * (i + 1)) - 16;
 		sprites[116 + i].attribute2 = WHITE_RECTANGLE_ADDR;
 	}
@@ -468,11 +482,20 @@ void DrawCountdownBar()
 void ProcessMenuScreen()
 {
 	if (KeyReleased(KEY_R) && menu_lock == FALSE)
-		ChangeState(TUTORIAL);
+	{
+		StartMosaicEffect();
+		next_state = TUTORIAL;
+	}
 	else if (KeyReleased(KEY_L) && menu_lock == FALSE)
-		ChangeState(CREDITS);
+	{
+		StartMosaicEffect();
+		next_state = CREDITS;
+	}
 	else
 		menu_lock = FALSE;
+
+	if (MOSAIC_EFFECT_ENDED)
+		ChangeState(next_state);
 }
 
 void ProcessGameOverScreen()
@@ -486,9 +509,12 @@ void ProcessGameOverScreen()
 void ProcessCreditsScreen()
 {
 	if (KeyReleased(KEY_R) && menu_lock == FALSE)
-		ChangeState(MENU);
+		StartMosaicEffect();
 	else
 		menu_lock = FALSE;
+
+	if (MOSAIC_EFFECT_ENDED)
+		ChangeState(MENU);
 }
 
 void EvaluateEndTutorial()
@@ -517,7 +543,7 @@ void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post)
 		// Post bg
 		DrawPostBg(current_post_id, x_offset, y_offset);
 
-		sprites[112 + current_post_id].attribute0 = COLOR_256 | WIDE | 8 + y_offset;
+		sprites[112 + current_post_id].attribute0 = COLOR_256 | MOSAIC | WIDE | 8 + y_offset;
 		sprites[112 + current_post_id].attribute1 = SIZE_64 | 32 + x_offset;
 		sprites[112 + current_post_id].attribute2 = WHITE_RECTANGLE_ADDR;
 
@@ -544,7 +570,7 @@ void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post)
 	}
 	else
 	{
-		sprites[112 + current_post_id].attribute0 = COLOR_256 | WIDE | SCREEN_HEIGHT;
+		sprites[112 + current_post_id].attribute0 = COLOR_256 | MOSAIC | WIDE | SCREEN_HEIGHT;
 		sprites[112 + current_post_id].attribute1 = SIZE_64 | SCREEN_WIDTH;
 
 		DrawPostBg(current_post_id, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -593,7 +619,7 @@ void DrawCreditsScreen()
 
 	DrawText("ART: PIERA FALCONE", CalculateCenterX(18), 80);
 	DrawText("CODE: GIORGIO POMETTINI", CalculateCenterX(23), 96);
-	// DrawText("MUSIC: TECLA ZORZI", 0, 32); <- Sorry Tecla :(
+	// DrawText("MUSIC: TECLA ZORZI", 0, 32);
 
 	DrawText("PREMI R PER USCIRE", CalculateCenterX(18), 120);
 }
@@ -642,13 +668,47 @@ inline u16 CalculateCenterX(u16 char_num)
 	return (SCREEN_WIDTH / 2) - ((char_num * 8) / 2);
 }
 
-void StartGameMusic()
+void StartMosaicEffect()
 {
+	mosaic_delta = 1;
+	mosaic_amount = 1;
+	mosaic_effect = TRUE;
+}
+
+void ProcessMosaicEffect()
+{
+	if (mosaic_effect == TRUE)
+	{
+		mosaic_amount += mosaic_delta;
+
+		if (mosaic_amount >= MOSAIC_MAX)
+			mosaic_delta = -1;
+
+		if (mosaic_amount == MOSAIC_MIN)
+			mosaic_effect = FALSE;
+	}
+
+	REG_MOSAIC = mosaic_amount * 0x1111;
+}
+
+void PlayMusic()
+{
+	REG_SGCNT0_H = DSOUND_A_RIGHT_CHANNEL | DSOUND_A_LEFT_CHANNEL | DSOUND_A_FIFO_RESET;
+	REG_SGCNT1 = SOUND_MASTER_ENABLE;
+	REG_DM1SAD = (u32)africa;
+	REG_DM1DAD = 0x40000A0;
+	REG_DM1CNT_H = DMA_DEST_FIXED | DMA_REPEAT | DMA_32 | DMA_TIMING_SYNC_TO_DISPLAY | DMA_ENABLE;
+
+	// Sample rate
+	REG_TM0D = 65536 - (16777216 / 11025);
+	REG_TM0CNT = TIMER_ENABLE;
 }
 
 void _Init()
 {
 	SetMode(MODE_4 | BG2_ENABLE | OBJ_ENABLE | OBJ_MAP_2D);
+
+	REG_BG2CNT |= BG_MOSAIC_ENABLE;
 
 	// TODO: Find a way to generate a random seed
 	srand(10);

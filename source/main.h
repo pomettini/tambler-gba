@@ -3,6 +3,8 @@
 #define FALSE 0
 #define TRUE 1
 
+// For the lulz
+
 #define ever \
     ;        \
     ;
@@ -38,6 +40,34 @@
 
 #define SPRITE_START_ADDR 512
 #define WHITE_RECTANGLE_ADDR 768
+
+#define MOSAIC_MIN 0
+#define MOSAIC_MAX 14
+
+// Registers
+
+#define REG_SGCNT0_H *(u16 *)0x4000082
+#define REG_SGCNT1 *(u16 *)0x4000084
+#define REG_DM1SAD *(u32 *)0x40000BC
+#define REG_DM1DAD *(u32 *)0x40000C0
+#define REG_DM1CNT_H *(u16 *)0x40000C6
+#define REG_TM0D *(u16 *)0x4000100
+#define REG_TM0CNT *(u16 *)0x4000102
+
+#define DSOUND_A_RIGHT_CHANNEL 256
+#define DSOUND_A_LEFT_CHANNEL 512
+#define DSOUND_A_FIFO_RESET 2048
+#define SOUND_MASTER_ENABLE 128
+
+#define DMA_DEST_FIXED 64
+#define DMA_REPEAT 512
+#define DMA_32 1024
+#define DMA_TIMING_SYNC_TO_DISPLAY 4096 | 8192
+#define DMA_ENABLE 32768
+#define TIMER_ENABLE 128
+
+#define REG_BG2CNT *(u16 *)0x400000C
+#define REG_MOSAIC *(u32 *)0x400004C
 
 enum states
 {
@@ -154,7 +184,9 @@ void DrawPosts();
 void DrawPostBg(u16 id, s16 pos_x, s16 pos_y);
 void DrawCountdownBar();
 void SetTextColor(u16 color);
-void StartGameMusic();
+void StartMosaicEffect();
+void ProcessMosaicEffect();
+void PlayMusic();
 
 void ProcessMenuScreen();
 void ProcessGameOverScreen();
