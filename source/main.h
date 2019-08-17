@@ -69,6 +69,8 @@
 #define REG_BG2CNT *(u16 *)0x400000C
 #define REG_MOSAIC *(u32 *)0x400004C
 
+// Structures
+
 enum states
 {
     MENU = 0,
@@ -103,6 +105,8 @@ typedef struct tutorial_post
     char third[TUTORIAL_TEXT_LEN_MAX];
     u16 is_last_one;
 } tutorial_post_t;
+
+// ROM data
 
 const post_t DATABASE[] = {
     {"DONNA CALDA", "A 2 KM", "DA TE", FALSE},
@@ -149,11 +153,16 @@ const tutorial_post_t TUTORIAL_POSTS[] = {
     {"SE SBAGLI SARAI", "LICENZIATO!!!", "", FALSE},
 };
 
+#define SIN_LUT_MAX 42
+const s16 SIN_LUT[] = {0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 0, 0, -1, -1, -1, -2, -2, -2, -2, -3, -3, -3, -3, -3, -2, -2, -2, -2, -1, -1, -1};
+
+// Forward declarations
+
 void CopyOAM();
 void ResetSpritesPosition();
 void InitializeSprites();
-void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y);
-void DrawText(unsigned char *text, s16 pos_x, s16 pos_y);
+void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y, u16 wave);
+void DrawText(unsigned char *text, s16 pos_x, s16 pos_y, u16 wave);
 void CleanCharacterSprites();
 void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y);

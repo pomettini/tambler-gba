@@ -10,10 +10,9 @@
 #include "africa.h"
 #include "main.h"
 
+// TODO: Add sfx and music (almost)
 // TODO: Add sprite flipping
-// TODO: Add sfx and music
 // TODO: Fix magenta screen between swaps
-// TODO: Add sine wave letters
 
 // States
 u16 game_state = MENU;
@@ -56,6 +55,7 @@ u16 mosaic_amount = 0;
 s16 mosaic_delta = 0;
 
 u16 next_state = 0;
+u16 counter = 0;
 
 #define MOSAIC_EFFECT_ENDED mosaic_amount == MOSAIC_MAX
 
@@ -66,6 +66,7 @@ int main()
 	for (ever)
 	{
 		current_char = 0;
+		counter++;
 
 		PlayMusic();
 		KeyPoll();
@@ -113,7 +114,7 @@ void InitializeSprites()
 	}
 }
 
-void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y)
+void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y, u16 wave)
 {
 	if (pos_x < 0)
 		pos_x = SCREEN_WIDTH;
@@ -121,21 +122,28 @@ void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y)
 	if (current_char >= LETTERS_MAX)
 		return;
 
-	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | MOSAIC | SQUARE | pos_y;
+	if (wave == TRUE)
+		sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | MOSAIC | SQUARE | pos_y + SIN_LUT[((current_char * 4) + counter) % SIN_LUT_MAX];
+	else
+		sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute0 = COLOR_256 | MOSAIC | SQUARE | pos_y;
+
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute1 = SIZE_8 | pos_x;
 	sprites[BIG_SPR_START_OFFSET + BIG_SPR_NUM + current_char].attribute2 = SPRITE_START_ADDR + 320 + ((u16)char_ * 2);
 
-	current_char++;
+	// If character is empty, it will not be stored on the sprite table
+	if (char_ != ' ')
+		current_char++;
 }
 
-void DrawText(unsigned char *text, s16 pos_x, s16 pos_y)
+void DrawText(unsigned char *text, s16 pos_x, s16 pos_y, u16 wave)
 {
 	u16 curr_pos_x = pos_x;
 
 	while (*text != '\0')
 	{
-		DrawCharacter(*text++, curr_pos_x, pos_y);
+		DrawCharacter(*text, curr_pos_x, pos_y, wave);
 		curr_pos_x += 8;
+		text++;
 	}
 }
 
@@ -426,15 +434,15 @@ void DrawPost(s16 x_offset, s16 y_offset, post_t *post)
 	DrawText(
 		post->first,
 		72 + x_offset,
-		16 + y_offset + TEXT_Y_OFFSET);
+		16 + y_offset + TEXT_Y_OFFSET, FALSE);
 	DrawText(
 		post->second,
 		72 + x_offset,
-		24 + y_offset + TEXT_Y_OFFSET);
+		24 + y_offset + TEXT_Y_OFFSET, FALSE);
 	DrawText(
 		post->third,
 		72 + x_offset,
-		32 + y_offset + TEXT_Y_OFFSET);
+		32 + y_offset + TEXT_Y_OFFSET, FALSE);
 
 	current_post_id += 2;
 }
@@ -530,10 +538,10 @@ void DrawMenuScreen()
 	// bg
 	// falling hearts draw
 	// subtitle
-	DrawText("(PULISCI L'INTERNET)", CalculateCenterX(20), 80);
+	DrawText("(PULISCI L'INTERNET)", CalculateCenterX(20), 80, TRUE);
 
-	DrawText("PREMI R PER INIZIARE", CalculateCenterX(20), 104);
-	DrawText("PREMI L PER I CREDITS", CalculateCenterX(21), 120);
+	DrawText("PREMI R PER INIZIARE", CalculateCenterX(20), 104, FALSE);
+	DrawText("PREMI L PER I CREDITS", CalculateCenterX(21), 120, FALSE);
 }
 
 void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post)
@@ -557,15 +565,15 @@ void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post)
 			DrawText(
 				post->first,
 				36 + x_offset,
-				16 + y_offset + TEXT_Y_OFFSET);
+				16 + y_offset + TEXT_Y_OFFSET, FALSE);
 			DrawText(
 				post->second,
 				36 + x_offset,
-				24 + y_offset + TEXT_Y_OFFSET);
+				24 + y_offset + TEXT_Y_OFFSET, FALSE);
 			DrawText(
 				post->third,
 				36 + x_offset,
-				32 + y_offset + TEXT_Y_OFFSET);
+				32 + y_offset + TEXT_Y_OFFSET, FALSE);
 		}
 	}
 	else
@@ -604,24 +612,23 @@ void DrawGameOverScreen()
 	char score_text[] = "IL TUO PUNTEGGIO E':    ";
 	sprintf(&score_text[21], "%i", score);
 
-	DrawText("GAME OVER", CalculateCenterX(9), 40);
-	DrawText("SEI STATO CACCIATO!", CalculateCenterX(19), 64);
-	DrawText(score_text, CalculateCenterX(23), 88);
-	DrawText("PREMI R PER RIPROVARE", CalculateCenterX(21), 112);
+	DrawText("GAME OVER", CalculateCenterX(9), 40, TRUE);
+	DrawText("SEI STATO CACCIATO!", CalculateCenterX(19), 64, FALSE);
+	DrawText(score_text, CalculateCenterX(23), 88, FALSE);
+	DrawText("PREMI R PER RIPROVARE", CalculateCenterX(21), 112, FALSE);
 }
 
 void DrawCreditsScreen()
 {
 	SetTextColor(COLOR_WHITE);
 
-	DrawText("TAMBLER", CalculateCenterX(7), 40);
-	DrawText("A PIERETTINI GAME", CalculateCenterX(17), 56);
+	DrawText("A PIERETTINI GAME", CalculateCenterX(17), 36, TRUE);
 
-	DrawText("ART: PIERA FALCONE", CalculateCenterX(18), 80);
-	DrawText("CODE: GIORGIO POMETTINI", CalculateCenterX(23), 96);
-	// DrawText("MUSIC: TECLA ZORZI", 0, 32);
+	DrawText("ART: PIERA FALCONE", CalculateCenterX(18), 60, FALSE);
+	DrawText("CODE: GIORGIO POMETTINI", CalculateCenterX(23), 76, FALSE);
+	DrawText("MUSIC: TECLA ZORZI", CalculateCenterX(18), 92, FALSE);
 
-	DrawText("PREMI R PER USCIRE", CalculateCenterX(18), 120);
+	DrawText("PREMI R PER USCIRE", CalculateCenterX(18), 116, FALSE);
 }
 
 void SetTextColor(u16 color)
