@@ -18,6 +18,7 @@
 // TODO: Add falling stuff on menu screen
 // TODO: Add small sprites on post images
 // TODO: Add best score
+// TODO: Split code to multiple files
 
 // States
 u16 game_state = MENU;
@@ -62,26 +63,20 @@ s16 mosaic_delta = 0;
 u16 next_state = 0;
 u16 counter = 0;
 
-#define MOSAIC_EFFECT_ENDED mosaic_amount == MOSAIC_MAX
-
 int main()
 {
 	_Init();
+	
+	PlayMusic();
 
 	for (ever)
 	{
 		current_char = 0;
 		counter++;
 
-		PlayMusic();
 		KeyPoll();
 		_Update();
 		_Draw();
-
-		// if (KeyReleased(KEY_A))
-		// 	StartMosaicEffect();
-
-		ProcessMosaicEffect();
 		WaitForVsync();
 		CopyOAM();
 	}
@@ -201,6 +196,9 @@ void KeyPoll()
 
 u32 KeyReleased(u32 key)
 {
+	// Generates another random seed
+	rand();
+
 	return (~__key_curr & __key_prev) & key;
 }
 
@@ -706,6 +704,13 @@ void ProcessMosaicEffect()
 	REG_MOSAIC = mosaic_amount * 0x1111;
 }
 
+int rand()
+{
+	static int work = 0xD371F947;
+	work = work * 0x41C64E6D + 0x3039;
+	return ((work >> 16) & 0x7FFF);
+}
+
 void PlayMusic()
 {
 	REG_SGCNT0_H = DSOUND_A_RIGHT_CHANNEL | DSOUND_A_LEFT_CHANNEL | DSOUND_A_FIFO_RESET;
@@ -723,10 +728,8 @@ void _Init()
 {
 	SetMode(MODE_4 | BG2_ENABLE | OBJ_ENABLE | OBJ_MAP_2D);
 
+	// Enable mosaic on Background 2
 	REG_BG2CNT |= BG_MOSAIC_ENABLE;
-
-	// TODO: Find a way to generate a random seed
-	srand(10);
 
 	// Copy palette data
 	for (u16 i = 0; i < 256; i++)
@@ -805,5 +808,6 @@ void _Draw()
 		DrawCreditsScreen();
 	}
 
+	ProcessMosaicEffect();
 	CleanCharacterSprites();
 }

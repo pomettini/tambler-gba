@@ -48,7 +48,8 @@
 			"onering.h": "c",
 			"dma.h": "c",
 			"dispcnt.h": "c",
-			"malloc.h": "c"
+			"malloc.h": "c",
+			"wavplay.h": "c"
 		},
 		"cSpell.enabled": false
 	}

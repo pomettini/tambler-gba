@@ -44,6 +44,8 @@
 #define MOSAIC_MIN 0
 #define MOSAIC_MAX 14
 
+#define MOSAIC_EFFECT_ENDED mosaic_amount == MOSAIC_MAX
+
 // Registers
 
 #define REG_SGCNT0_H *(u16 *)0x4000082
@@ -218,3 +220,7 @@ inline u16 CalculateCenterX(u16 char_num);
 void _Init();
 void _Update();
 void _Draw();
+
+// Overridden functions
+
+int rand();
