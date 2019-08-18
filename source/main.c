@@ -11,7 +11,7 @@
 #include "main.h"
 
 // TODO: Add sfx
-// TODO: Add music (almost!)
+// TODO: Add menu music
 // TODO: Loop music
 // TODO: Add sprite flipping
 // TODO: Fix magenta screen between swaps
@@ -52,6 +52,7 @@ u16 pos_y = 0;
 u16 palette = 0;
 
 u16 current_char = 0;
+u16 current_char_bg = 0;
 u16 current_post_id = 0;
 
 u16 __key_curr = 0, __key_prev = 0;
@@ -66,7 +67,7 @@ u16 counter = 0;
 int main()
 {
 	_Init();
-	
+
 	PlayMusic();
 
 	for (ever)
@@ -142,6 +143,36 @@ void DrawText(unsigned char *text, s16 pos_x, s16 pos_y, u16 wave)
 	while (*text != '\0')
 	{
 		DrawCharacter(*text, curr_pos_x, pos_y, wave);
+		curr_pos_x += 8;
+		text++;
+	}
+}
+
+void DrawCharacterBg(unsigned char char_, s16 pos_x, s16 pos_y)
+{
+	u16 bitmap_x = (char_ % 64) * 64;
+	u16 bitmap_y = (char_ / 64) * 64;
+
+	u16 start_at = (64 * bitmap_y) + bitmap_x;
+
+	u16 stupid_counter = 0;
+	for (u16 y = 0; y < 8; y++)
+	{
+		for (u16 x = 0; x < 8; x++)
+		{
+			PlotPixel(x + pos_x, y + pos_y, font_data[start_at + stupid_counter]);
+			stupid_counter++;
+		}
+	}
+}
+
+void DrawTextBg(unsigned char *text, s16 pos_x, s16 pos_y)
+{
+	u16 curr_pos_x = pos_x;
+
+	while (*text != '\0')
+	{
+		DrawCharacterBg(*text, curr_pos_x, pos_y);
 		curr_pos_x += 8;
 		text++;
 	}
@@ -388,17 +419,17 @@ void ChangeState(u16 new_state)
 		SwapToTitleBg();
 		break;
 	case TUTORIAL:
-		SwapToDarkBlueBg();
+		SwapToTutorialBg();
 		break;
 	case GAME:
 		SwapToGameBg();
 		SetTextColor(COLOR_BLACK);
 		break;
 	case GAME_OVER:
-		SwapToDarkBlueBg();
+		SwapToGameOverBg();
 		break;
 	case CREDITS:
-		SwapToLightBlueBg();
+		SwapToCreditsBg();
 		break;
 	}
 
@@ -545,9 +576,6 @@ void DrawMenuScreen()
 	// falling hearts draw
 	// subtitle
 	DrawText("(PULISCI L'INTERNET)", CalculateCenterX(20), 80, TRUE);
-
-	DrawText("PREMI R PER INIZIARE", CalculateCenterX(20), 104, FALSE);
-	DrawText("PREMI L PER I CREDITS", CalculateCenterX(21), 120, FALSE);
 }
 
 void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post)
@@ -598,8 +626,6 @@ void DrawTutorialPosts()
 {
 	SetTextColor(COLOR_BLACK);
 
-	// DrawText("PREMI R", CalculateCenterX(9), 8);
-
 	s16 y_offset = posts_y_offset + 16;
 	s16 x_offset = posts_x_offset;
 
@@ -628,13 +654,7 @@ void DrawCreditsScreen()
 {
 	SetTextColor(COLOR_WHITE);
 
-	DrawText("A PIERETTINI GAME", CalculateCenterX(17), 36, TRUE);
-
-	DrawText("ART: PIERA FALCONE", CalculateCenterX(18), 60, FALSE);
-	DrawText("CODE: GIORGIO POMETTINI", CalculateCenterX(23), 76, FALSE);
-	DrawText("MUSIC: TECLA ZORZI", CalculateCenterX(18), 92, FALSE);
-
-	DrawText("PREMI R PER USCIRE", CalculateCenterX(18), 116, FALSE);
+	DrawText("MADE WITH <3 BY PIERETTINI", CalculateCenterX(26), 36, TRUE);
 }
 
 void SetTextColor(u16 color)
@@ -650,6 +670,12 @@ void SwapToTitleBg()
 	memset(FrontBuffer, 0x01, SCREEN_WIDTH * SCREEN_HEIGHT);
 	// Put at height 38
 	memcpy(FrontBuffer + (19 * SCREEN_WIDTH), title_bg_data, sizeof(title_bg_data));
+
+	BG_PaletteMem[TEXT_PALETTE_ADDR] = COLOR_WHITE;
+	BG_PaletteMem[0] = COLOR_LIGHT_BLUE;
+
+	DrawTextBg("PREMI R PER INIZIARE", CalculateCenterX(20), 104);
+	DrawTextBg("PREMI L PER I CREDITS", CalculateCenterX(21), 120);
 }
 
 void SwapToGameBg()
@@ -660,7 +686,19 @@ void SwapToGameBg()
 	memcpy(FrontBuffer, game_bg_data, sizeof(game_bg_data));
 }
 
-void SwapToDarkBlueBg()
+void SwapToTutorialBg()
+{
+	for (u16 i = 0; i < 256; i++)
+		BG_PaletteMem[i] = COLOR_DARK_BLUE;
+
+	BG_PaletteMem[TEXT_PALETTE_ADDR] = COLOR_WHITE;
+
+	memset(FrontBuffer, 0x0000, SCREEN_WIDTH * SCREEN_HEIGHT);
+
+	DrawTextBg("PREMI L O R PER CONTINUARE", CalculateCenterX(26), 8);
+}
+
+void SwapToGameOverBg()
 {
 	for (u16 i = 0; i < 256; i++)
 		BG_PaletteMem[i] = COLOR_DARK_BLUE;
@@ -668,12 +706,20 @@ void SwapToDarkBlueBg()
 	memset(FrontBuffer, 0x0000, SCREEN_WIDTH * SCREEN_HEIGHT);
 }
 
-void SwapToLightBlueBg()
+void SwapToCreditsBg()
 {
 	for (u16 i = 0; i < 256; i++)
 		BG_PaletteMem[i] = COLOR_LIGHT_BLUE;
 
+	BG_PaletteMem[TEXT_PALETTE_ADDR] = COLOR_WHITE;
+
 	memset(FrontBuffer, 0x0000, SCREEN_WIDTH * SCREEN_HEIGHT);
+
+	DrawTextBg("ART: PIERA FALCONE", CalculateCenterX(18), 60);
+	DrawTextBg("CODE: GIORGIO POMETTINI", CalculateCenterX(23), 76);
+	DrawTextBg("MUSIC: TECLA ZORZI", CalculateCenterX(18), 92);
+
+	DrawTextBg("PREMI R PER USCIRE", CalculateCenterX(18), 116);
 }
 
 inline u16 CalculateCenterX(u16 char_num)
@@ -709,6 +755,16 @@ int rand()
 	static int work = 0xD371F947;
 	work = work * 0x41C64E6D + 0x3039;
 	return ((work >> 16) & 0x7FFF);
+}
+
+void PlotPixel(u16 x, u16 y, u8 color)
+{
+	// Stolen from TONC lib
+	u16 *destination = &FrontBuffer[(y * SCREEN_WIDTH + x) >> 1];
+	if (x & 1)
+		*destination = (*destination & 0xFF) | (color << 8);
+	else
+		*destination = (*destination & ~0xFF) | color;
 }
 
 void PlayMusic()

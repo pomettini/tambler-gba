@@ -49,7 +49,12 @@
 			"dma.h": "c",
 			"dispcnt.h": "c",
 			"malloc.h": "c",
-			"wavplay.h": "c"
+			"wavplay.h": "c",
+			"__bit_reference": "c",
+			"algorithm": "c",
+			"bitset": "c",
+			"chrono": "c",
+			"unordered_map": "c"
 		},
 		"cSpell.enabled": false
 	}

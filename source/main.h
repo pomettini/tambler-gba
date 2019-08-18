@@ -155,6 +155,7 @@ const tutorial_post_t TUTORIAL_POSTS[] = {
     {"SE SBAGLI SARAI", "LICENZIATO!!!", "", FALSE},
 };
 
+// Calculated by hand!
 #define SIN_LUT_MAX 42
 const s16 SIN_LUT[] = {0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 0, 0, -1, -1, -1, -2, -2, -2, -2, -3, -3, -3, -3, -3, -2, -2, -2, -2, -1, -1, -1};
 
@@ -165,6 +166,8 @@ void ResetSpritesPosition();
 void InitializeSprites();
 void DrawCharacter(unsigned char char_, s16 pos_x, s16 pos_y, u16 wave);
 void DrawText(unsigned char *text, s16 pos_x, s16 pos_y, u16 wave);
+void DrawCharacterBg(unsigned char char_, s16 pos_x, s16 pos_y);
+void DrawTextBg(unsigned char *text, s16 pos_x, s16 pos_y);
 void CleanCharacterSprites();
 void MoveSmallSprite(u16 id, s16 pos_x, s16 pos_y);
 void MoveMediumSprite(u16 id, s16 pos_x, s16 pos_y);
@@ -197,6 +200,7 @@ void DrawCountdownBar();
 void SetTextColor(u16 color);
 void StartMosaicEffect();
 void ProcessMosaicEffect();
+void PlotPixel(u16 x, u16 y, u8 color);
 void PlayMusic();
 
 void ProcessMenuScreen();
@@ -211,9 +215,10 @@ void DrawGameOverScreen();
 void DrawCreditsScreen();
 
 void SwapToTitleBg();
+void SwapToTutorialBg();
+void SwapToGameOverBg();
 void SwapToGameBg();
-void SwapToDarkBlueBg();
-void SwapToLightBlueBg();
+void SwapToCreditsBg();
 
 inline u16 CalculateCenterX(u16 char_num);
 
