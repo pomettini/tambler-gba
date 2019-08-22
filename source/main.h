@@ -44,7 +44,12 @@
 #define MOSAIC_MIN 0
 #define MOSAIC_MAX 14
 
+// Constant functions
+
 #define MOSAIC_EFFECT_ENDED mosaic_amount == MOSAIC_MAX
+#define CALCULATE_CENTER_X(char_num) (SCREEN_WIDTH / 2) - ((char_num * 8) / 2)
+#define SIN_LUT_MAX 42
+const s16 SIN_LUT[] = {0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 0, 0, -1, -1, -1, -2, -2, -2, -2, -3, -3, -3, -3, -3, -2, -2, -2, -2, -1, -1, -1};
 
 // Registers
 
@@ -155,10 +160,6 @@ const tutorial_post_t TUTORIAL_POSTS[] = {
     {"SE SBAGLI SARAI", "LICENZIATO!!!", "", FALSE},
 };
 
-// Calculated by hand!
-#define SIN_LUT_MAX 42
-const s16 SIN_LUT[] = {0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 0, 0, -1, -1, -1, -2, -2, -2, -2, -3, -3, -3, -3, -3, -2, -2, -2, -2, -1, -1, -1};
-
 // Forward declarations
 
 void CopyOAM();
@@ -219,8 +220,6 @@ void SwapToTutorialBg();
 void SwapToGameOverBg();
 void SwapToGameBg();
 void SwapToCreditsBg();
-
-inline u16 CalculateCenterX(u16 char_num);
 
 void _Init();
 void _Update();

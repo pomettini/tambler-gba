@@ -575,7 +575,7 @@ void DrawMenuScreen()
 	// bg
 	// falling hearts draw
 	// subtitle
-	DrawText("(PULISCI L'INTERNET)", CalculateCenterX(20), 80, TRUE);
+	DrawText("(PULISCI L'INTERNET)", CALCULATE_CENTER_X(20), 80, TRUE);
 }
 
 void DrawTutorialPost(s16 x_offset, s16 y_offset, tutorial_post_t *post)
@@ -644,17 +644,17 @@ void DrawGameOverScreen()
 	char score_text[] = "IL TUO PUNTEGGIO E':    ";
 	sprintf(&score_text[21], "%i", score);
 
-	DrawText("GAME OVER", CalculateCenterX(9), 40, TRUE);
-	DrawText("SEI STATO CACCIATO!", CalculateCenterX(19), 64, FALSE);
-	DrawText(score_text, CalculateCenterX(23), 88, FALSE);
-	DrawText("PREMI R PER RIPROVARE", CalculateCenterX(21), 112, FALSE);
+	DrawText("GAME OVER", CALCULATE_CENTER_X(9), 40, TRUE);
+	DrawText("SEI STATO CACCIATO!", CALCULATE_CENTER_X(19), 64, FALSE);
+	DrawText(score_text, CALCULATE_CENTER_X(23), 88, FALSE);
+	DrawText("PREMI R PER RIPROVARE", CALCULATE_CENTER_X(21), 112, FALSE);
 }
 
 void DrawCreditsScreen()
 {
 	SetTextColor(COLOR_WHITE);
 
-	DrawText("MADE WITH <3 BY PIERETTINI", CalculateCenterX(26), 36, TRUE);
+	DrawText("MADE WITH <3 BY PIERETTINI", CALCULATE_CENTER_X(26), 36, TRUE);
 }
 
 void SetTextColor(u16 color)
@@ -674,8 +674,8 @@ void SwapToTitleBg()
 	BG_PaletteMem[TEXT_PALETTE_ADDR] = COLOR_WHITE;
 	BG_PaletteMem[0] = COLOR_LIGHT_BLUE;
 
-	DrawTextBg("PREMI R PER INIZIARE", CalculateCenterX(20), 104);
-	DrawTextBg("PREMI L PER I CREDITS", CalculateCenterX(21), 120);
+	DrawTextBg("PREMI R PER INIZIARE", CALCULATE_CENTER_X(20), 104);
+	DrawTextBg("PREMI L PER I CREDITS", CALCULATE_CENTER_X(21), 120);
 }
 
 void SwapToGameBg()
@@ -695,7 +695,7 @@ void SwapToTutorialBg()
 
 	memset(FrontBuffer, 0x0000, SCREEN_WIDTH * SCREEN_HEIGHT);
 
-	DrawTextBg("PREMI L O R PER CONTINUARE", CalculateCenterX(26), 8);
+	DrawTextBg("PREMI L O R PER CONTINUARE", CALCULATE_CENTER_X(26), 8);
 }
 
 void SwapToGameOverBg()
@@ -715,16 +715,11 @@ void SwapToCreditsBg()
 
 	memset(FrontBuffer, 0x0000, SCREEN_WIDTH * SCREEN_HEIGHT);
 
-	DrawTextBg("ART: PIERA FALCONE", CalculateCenterX(18), 60);
-	DrawTextBg("CODE: GIORGIO POMETTINI", CalculateCenterX(23), 76);
-	DrawTextBg("MUSIC: TECLA ZORZI", CalculateCenterX(18), 92);
+	DrawTextBg("ART: PIERA FALCONE", CALCULATE_CENTER_X(18), 60);
+	DrawTextBg("CODE: GIORGIO POMETTINI", CALCULATE_CENTER_X(23), 76);
+	DrawTextBg("MUSIC: TECLA ZORZI", CALCULATE_CENTER_X(18), 92);
 
-	DrawTextBg("PREMI R PER USCIRE", CalculateCenterX(18), 116);
-}
-
-inline u16 CalculateCenterX(u16 char_num)
-{
-	return (SCREEN_WIDTH / 2) - ((char_num * 8) / 2);
+	DrawTextBg("PREMI R PER USCIRE", CALCULATE_CENTER_X(18), 116);
 }
 
 void StartMosaicEffect()
